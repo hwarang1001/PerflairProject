@@ -1,0 +1,15 @@
+import Header from "../../include/Header";
+import Footer from "../../include/Footer";
+import ListComponent from "../../component/product/ListComponent";
+
+const ListPage = () => {
+  return (
+    <>
+      <Header />
+      <ListComponent />
+      <Footer />
+    </>
+  );
+};
+
+export default ListPage;
