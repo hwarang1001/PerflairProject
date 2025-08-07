@@ -1,78 +1,16 @@
-/* 전체 배경과 레이아웃 */
-.notice-list-container {
-  padding: 40px 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  font-family: "SUIT", "Pretendard", "Noto Sans KR", sans-serif;
-  background-color: #f9f9f9;
-}
-
-/* 제목 */
-.notice-list-container h2 {
-  font-size: 28px;
-  margin-bottom: 24px;
-  color: #333;
-}
-
-/* 리스트 */
-.notice-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.notice-list li {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.15s ease, box-shadow 0.3s ease;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.notice-list li:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* 제목 링크 */
-.notice-title {
-  font-size: 16px;
-  color: #2d2d2d;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.notice-title:hover {
-  text-decoration: underline;
-}
-
-/* 날짜 */
-.notice-date {
-  font-size: 14px;
-  color: #9e9e9e;
-}
-
-/* 관리자용 버튼 */
-.notice-admin-actions {
-  margin-bottom: 24px;
-  text-align: right;
-}
-
-.notice-admin-actions button {
+.btn-mz-style {
   background-color: #a67c52;
-  color: white;
   border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(240, 180, 41, 0.4); /* 은은한 그림자 */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
 }
 
-.notice-admin-actions button:hover {
-  background-color: #8c643f;
+.btn-mz-style:hover {
+  background-color: #8c643f; 
+  color: #fff;
 }
