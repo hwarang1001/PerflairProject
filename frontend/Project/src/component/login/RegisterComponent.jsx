@@ -1,27 +1,56 @@
 import React, { useState } from "react";
+import DaumPostcode from "react-daum-postcode";
 import "./RegisterComponent.css";
-const a = {
-    username: "",
-    password: "",
-    confirmPassword: "",
-    email: "",
-    realName: "", // 본명 추가
-}
+
+const initialForm = {
+  email: "",
+  realName: "",
+  password: "",
+  confirmPassword: "",
+  zonecode: "", // 우편번호
+  address: "", // 기본 주소 (API에서 자동입력)
+  detailAddress: "", // 상세 주소 (직접 입력)
+};
+
 const RegisterComponent = () => {
-  const [form, setForm] = useState(a);
+  const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
+  const [showPostcode, setShowPostcode] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleAddressComplete = (data) => {
+    setForm({
+      ...form,
+      zonecode: data.zonecode,
+      address: data.address,
+    });
+    setShowPostcode(false);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const {
+      email,
+      realName,
+      password,
+      confirmPassword,
+      zonecode,
+      address,
+      detailAddress,
+    } = form;
 
-    const { username, password, confirmPassword, email, realName } = form;
-
-    // 필수 항목 확인
-    if (!username || !password || !confirmPassword || !email || !realName) {
+    if (
+      !email ||
+      !realName ||
+      !password ||
+      !confirmPassword ||
+      !zonecode ||
+      !address ||
+      !detailAddress
+    ) {
       setError("모든 필드를 입력해주세요.");
       return;
     }
@@ -32,19 +61,9 @@ const RegisterComponent = () => {
     }
 
     setError("");
-
-    // 콘솔 출력 (백엔드 연동 시 axios.post 등으로 대체)
     console.log("회원가입 정보:", form);
     alert("회원가입 요청 완료 (백엔드 연동 예정)");
-
-    // 입력 초기화
-    setForm({
-      username: "",
-      password: "",
-      confirmPassword: "",
-      email: "",
-      realName: "",
-    });
+    setForm(initialForm);
   };
 
   return (
@@ -53,10 +72,17 @@ const RegisterComponent = () => {
         <h2>회원가입</h2>
         <form onSubmit={handleSubmit} className="register-form">
           <input
+            type="email"
+            name="email"
+            placeholder="이메일"
+            value={form.email}
+            onChange={handleChange}
+          />
+          <input
             type="text"
-            name="username"
-            placeholder="아이디"
-            value={form.username}
+            name="realName"
+            placeholder="이름"
+            value={form.realName}
             onChange={handleChange}
           />
           <input
@@ -73,23 +99,61 @@ const RegisterComponent = () => {
             value={form.confirmPassword}
             onChange={handleChange}
           />
-          <input
-            type="text"
-            name="realName"
-            placeholder="성함"
-            value={form.realName}
-            onChange={handleChange}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="이메일"
-            value={form.email}
-            onChange={handleChange}
-          />
+
+          {/* 우편번호 + 주소 + 상세주소 */}
+          <div className="address-group">
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                name="zonecode"
+                value={form.zonecode}
+                readOnly
+                className="address-input"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPostcode(true)}
+                className="address-button"
+              >
+                주소 찾기
+              </button>
+            </div>
+
+            <input
+              type="text"
+              name="address"
+              value={form.address}
+              readOnly
+              className="address-input"
+            />
+
+            <input
+              type="text"
+              name="detailAddress"
+              placeholder="상세 주소"
+              value={form.detailAddress}
+              onChange={handleChange}
+              className="address-input"
+            />
+          </div>
+
           <button type="submit">회원가입</button>
           {error && <p className="register-error">{error}</p>}
         </form>
+
+        {showPostcode && (
+          <div className="modal-overlay" onClick={() => setShowPostcode(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="modal-close-button"
+                onClick={() => setShowPostcode(false)}
+              >
+                &times;
+              </button>
+              <DaumPostcode onComplete={handleAddressComplete} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

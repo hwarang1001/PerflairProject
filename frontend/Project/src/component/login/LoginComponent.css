@@ -1,6 +1,6 @@
 .login-container {
-  background-color: #fef9f4;
-  height: 100vh;
+  background-color: white;
+  height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,16 +9,19 @@
 
 .login-form-box {
   background-color: #ffffff;
-  padding: 40px;
+  padding: 40px 55px;
   border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
+  height: 80%;
+  max-height: 500px;
   text-align: center;
 }
 
 .login-title {
-  margin-bottom: 24px;
+  margin-top: 15px;
+  margin-bottom: 50px;
   font-size: 24px;
   color: #5c4b3b;
   font-weight: 600;
@@ -35,25 +38,30 @@
   font-size: 16px;
   border: 1px solid #d5c7b8;
   border-radius: 8px;
-  background-color: #fffaf6;
+  background-color: #ffffff;
   outline: none;
 }
 
 .login-button {
-  padding: 12px;
+  padding: 12px 20px;
   font-size: 16px;
-  background-color: #a67c52;
-  color: white;
-  border: none;
-  border-radius: 8px;
+  background-color: #f5f5f5; /* 밝은 회색톤 */
+  color: #333333; /* 진한 그레이 텍스트 */
+  border: 1px solid #dddddd;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
 .login-button:hover {
-  background-color: #8b6744;
+  background-color: #e0e0e0;
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
+
 
 .login-message {
   margin-top: 16px;
