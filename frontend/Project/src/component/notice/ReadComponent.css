@@ -1,0 +1,64 @@
+.notice-detail-container {
+  padding: 40px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: "SUIT", "Pretendard", "Noto Sans KR", sans-serif;
+  background-color: #fdfdfd;
+}
+
+.notice-detail-container h2 {
+  font-size: 26px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.notice-date {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 20px;
+}
+
+.notice-content {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #444;
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+.notice-admin-buttons {
+  margin-top: 24px;
+}
+
+.notice-admin-buttons button {
+  margin-right: 12px;
+  background-color: #a67c52;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.notice-admin-buttons button:hover {
+  background-color: #8c643f;
+}
+
+.back-button {
+  margin-top: 32px;
+  background: none;
+  border: 1px solid #ccc;
+  color: #555;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: #f0f0f0;
+}
