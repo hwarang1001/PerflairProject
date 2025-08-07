@@ -35,8 +35,12 @@ public class MemberDTO extends User {
                      .collect(Collectors.toList()));
         this.userId = userId;
         this.name = name;
-        this.address = address;
-        this.phoneNum = phoneNum;
+        
+        // 🚨 이 부분에서 null 체크 로직을 추가했습니다.
+        // address와 phoneNum이 null일 경우 빈 문자열로 초기화합니다.
+        this.address = (address != null) ? address : "";
+        this.phoneNum = (phoneNum != null) ? phoneNum : "";
+        
         this.social = social;
         this.roleNames = roleNames;
     }

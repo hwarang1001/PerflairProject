@@ -4,14 +4,21 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.kh.security.filter.JWTCheckFilter;
+import com.kh.security.handler.APILoginFailHandler;
+import com.kh.security.handler.APILoginSuccessHandler;
+import com.kh.security.handler.CustomAccessDeniedHandler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -19,6 +26,7 @@ import lombok.extern.log4j.Log4j2;
 @Configuration
 @Log4j2
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class CustomSecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -30,7 +38,18 @@ public class CustomSecurityConfig {
 		// CSRF(Cross-Site Request Forgery) 보호 기능을 비활성화
 		// REST API 서버에서는 일반적으로 CSRF 보호가 필요 없기 때문에 끄는 것이 일반적이다
 		http.csrf(config -> config.disable());
-		
+
+		http.formLogin(config -> {
+			config.loginPage("/api/member/login");
+			config.successHandler(new APILoginSuccessHandler());
+			config.failureHandler(new APILoginFailHandler());
+		});
+		// JWT 체크 추가
+		http.addFilterBefore(new JWTCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+
+		http.exceptionHandling(config -> {
+			config.accessDeniedHandler(new CustomAccessDeniedHandler());
+		});
 		return http.build();
 	}
 
@@ -47,8 +66,9 @@ public class CustomSecurityConfig {
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
-	@Bean 
-	public PasswordEncoder passwordEncoder() { 
-	   return new BCryptPasswordEncoder(); 
+
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,12 +32,25 @@ public class Product {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "PRODUCT_SEQ_GEN")
 	private Long pno;
+	
+	@Column(nullable = false)
 	private String pname;
+	
+	@Column(nullable = false)
 	private int price;
+	
+	@Column(nullable = false)
 	private int stock;
+	
+	@Column(nullable = false)
 	private int perfumeVol;
+	
+	@Column(nullable = false, columnDefinition = "NUMBER(1,0) default 0")
 	private boolean delFlag;
+	
+	@Column(nullable = false)
 	private String pdesc;
+	
 	@ElementCollection
 	@CollectionTable(name = "product_image_list", joinColumns = @JoinColumn(name = "product_pno"))
 
