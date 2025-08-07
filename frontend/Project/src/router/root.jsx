@@ -36,7 +36,7 @@ const root = createBrowserRouter([
     ),
   },
   {
-    path: `/product/read${3}`,
+    path: `/product/read/:pno`,
     element: (
       <Suspense fallback={<Loading />}>
         <ProductReadPage />
