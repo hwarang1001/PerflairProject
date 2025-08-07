@@ -2,24 +2,7 @@ import Slider from "react-slick";
 import styled from "styled-components";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import product1 from "../assets/product1.jpg";
-const carouselImages = [
-  {
-    id: 0,
-    url: product1,
-    alt: "배너1",
-  },
-  {
-    id: 1,
-    url: product1,
-    alt: "배너2",
-  },
-  {
-    id: 2,
-    url: product1,
-    alt: "배너3",
-  },
-];
+
 const CarouselWrapper = styled.div`
   width: 100%;
   margin: 0 auto;
@@ -52,7 +35,6 @@ const CarouselWrapper = styled.div`
     opacity: 1;
   }
 `;
-
 //  커스텀 화살표
 const NextArrow = ({ onClick }) => (
   <div
@@ -98,10 +80,10 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const Carousel = () => {
+const Carousel = ({ images }) => {
   const settings = {
     dots: true,
-    infinite: true,
+    infinite: images.length > 1,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -114,9 +96,9 @@ const Carousel = () => {
   return (
     <CarouselWrapper>
       <Slider {...settings}>
-        {carouselImages.map((image) => (
-          <div key={image.id}>
-            <img src={image.url} alt={image.alt} />
+        {images.map((imageUrl, index) => (
+          <div key={index}>
+            <img src={imageUrl} alt={`image-${index}`} />
           </div>
         ))}
       </Slider>
