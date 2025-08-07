@@ -21,7 +21,6 @@ import lombok.ToString;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SequenceGenerator(name = "MEMBER_SEQ_GEN", sequenceName = "MEMBER_SEQ", allocationSize = 1)
 @ToString(exclude = "memberRoleList")
 public class Member {
 	@Id
