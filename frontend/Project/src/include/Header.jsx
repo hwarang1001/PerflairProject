@@ -63,26 +63,21 @@ const Header = () => {
                 </ul>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#!">
+                <a className="nav-link" href="/notice">
                   공지사항
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#!">
+                <a className="nav-link" href="/qna">
                   질의응답
                 </a>
               </li>
             </ul>
 
             {/* 로그인 버튼 (JSP 조건부 로직은 React에서는 상태로 처리해야 함) */}
-            <button
-              type="button"
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#login"
-            >
-              로그인
-            </button>
+            <a className="nav-link" href="/login">
+                  로그인
+                </a>
           </div>
         </div>
       </nav>

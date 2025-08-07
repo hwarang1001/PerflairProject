@@ -1,0 +1,101 @@
+.login-container {
+  background-color: #fef9f4;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.login-form-box {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-title {
+  margin-bottom: 24px;
+  font-size: 24px;
+  color: #5c4b3b;
+  font-weight: 600;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-input {
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #d5c7b8;
+  border-radius: 8px;
+  background-color: #fffaf6;
+  outline: none;
+}
+
+.login-button {
+  padding: 12px;
+  font-size: 16px;
+  background-color: #a67c52;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.login-button:hover {
+  background-color: #8b6744;
+}
+
+.login-message {
+  margin-top: 16px;
+  font-weight: bold;
+}
+
+.login-message.success {
+  color: #2e7d32;
+}
+
+.login-message.error {
+  color: #c62828;
+}
+
+.login-links {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #7d6a58;
+}
+
+.login-link {
+  color: #7d6a58;
+  text-decoration: none;
+  margin: 0 4px;
+}
+
+.login-separator {
+  margin: 0 6px;
+  color: #b8a89f;
+}
+
+/* 일시적으로 UI만 구현 */
+.kakao-login-button {
+  margin-top: 12px;
+  padding: 12px;
+  width: 100%;
+  background-color: #fee500;
+  color: #3c1e1e;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed; /* 기능 없음 표시용 */
+  font-size: 16px;
+  opacity: 0.9;
+}
