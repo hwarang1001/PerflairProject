@@ -1,91 +1,156 @@
-/* src/component/qna/QnaDetail.css */
-
-.qna-detail-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 24px;
-  background-color: #fffaf6;
+.container-sm {
+  position: relative;
+  background-color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  font-family: "Noto Sans KR", sans-serif;
+  padding: 48px 28px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-family: "SUIT", "Pretendard", "Noto Sans KR", sans-serif;
+  margin-bottom: 3rem;
+  min-height: 600px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.qna-detail-title {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: #5c4b3b;
+.container-sm > h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
 
-.qna-detail-meta {
-  font-size: 13px;
+/* 작성일 */
+.notice-date {
+  font-weight: 400;
+  font-size: 1rem;
   color: #888;
-  margin-bottom: 24px;
-  display: flex;
-  justify-content: space-between;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: right;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.75rem;
 }
 
-.qna-detail-content {
-  font-size: 16px;
-  margin-bottom: 40px;
+/* 본문 내용 */
+.notice-content {
+  font-weight: 400;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #333;
   white-space: pre-line;
 }
 
-.qna-answer-section h3 {
-  font-size: 20px;
-  margin-bottom: 12px;
-  color: #4b3b2b;
+/* 답변 섹션 */
+.qna-answer-section {
+  position: absolute;
+  bottom: 80px;
+  left: 28px;
+  right: 28px;
+  padding: 1.5rem;
+  background-color: #f9f7f4;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.qna-answer-box {
-  background-color: #f0e8de;
-  padding: 16px;
-  border-radius: 8px;
+.qna-answer-section h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: 1.125rem;
 }
 
-.qna-answer-meta {
-  font-size: 12px;
+.qna-answer-section p {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.qna-answer-section .qna-answer-meta {
+  font-size: 0.875rem;
   color: #777;
-  margin-top: 8px;
+  text-align: right;
 }
 
-.qna-answer-form textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  border: 1px solid #d5c7b8;
-  border-radius: 8px;
-  resize: vertical;
-  font-size: 14px;
-  background-color: #fffaf6;
-  margin-bottom: 12px;
-}
-
-.qna-answer-form button {
-  background-color: #a67c52;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.qna-answer-form button:hover {
-  background-color: #8c643f;
-}
-
-.qna-waiting {
+/* 답변이 없을 때 */
+.qna-answer-empty {
+  position: absolute;
+  bottom: 80px;
+  left: 28px;
+  right: 28px;
+  background-color: #fdf6f6;
+  padding: 1.5rem;
+  border-radius: 10px;
+  text-align: center;
   color: #c62828;
-  font-weight: bold;
+  font-weight: 500;
+  border: 1px dashed #e0b4b4;
 }
 
-.qna-back-button {
-  margin-top: 32px;
-  background-color: #e0d3c2;
+/* 버튼 영역 정렬 */
+.notice-button-row {
+  position: absolute;
+  bottom: 20px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 버튼 그룹 */
+.button-group-right {
+  display: flex;
+  gap: 20px;
+}
+
+.button-back-left {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 공통 버튼 스타일 */
+.notice-button-row button {
+  min-width: 120px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+}
+
+/* 수정 버튼 */
+.btn-outline-secondary {
+  color: #555;
+  border-color: #ccc;
+}
+
+.btn-outline-secondary:hover {
+  color: #222;
+  background-color: #f2f2f2;
+  border-color: #bbb;
+}
+
+/* 삭제 버튼 */
+.btn-outline-danger {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.btn-outline-danger:hover {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+/* 목록으로 돌아가기 버튼 */
+.btn-secondary {
+  background-color: #a67c52;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #8c643f;
+  color: #fff;
 }
