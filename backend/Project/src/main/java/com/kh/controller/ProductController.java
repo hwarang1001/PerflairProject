@@ -37,7 +37,7 @@ public class ProductController {
 	private final ProductService productService;
 	private final CustomFileUtil fileUtil;
 
-	@PostMapping
+	@PostMapping("/")
 	public Map<String, Long> register(@ModelAttribute ProductDTO productDTO,
 			@RequestParam("files") List<MultipartFile> files) {
 
@@ -52,7 +52,7 @@ public class ProductController {
 	public ResponseEntity<Resource> viewFileGET(@PathVariable String fileName) {
 		return fileUtil.getFile(fileName);
 	}
-	@PreAuthorize("hasRole('ROLE_ADMIN')") 
+//	@PreAuthorize("hasRole('ROLE_ADMIN')") 
 	@GetMapping("/list")
 	public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
 		log.info("list............." + pageRequestDTO);

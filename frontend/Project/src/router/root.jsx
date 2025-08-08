@@ -5,6 +5,11 @@ const MainPage = lazy(() => import("../page/MainPage"));
 // product
 const ProductListPage = lazy(() => import("../page/product/ListPage"));
 const ProductReadPage = lazy(() => import("../page/product/ReadPage"));
+const ProductAddPage = lazy(() => import("../page/product/AddPage"));
+const ProductAdminListPage = lazy(() =>
+  import("../page/product/AdminListPage")
+);
+
 // notice
 const NoticeListPage = lazy(() => import("../page/notice/ListPage"));
 const NoticeReadPage = lazy(() => import("../page/notice/ReadPage"));
@@ -40,6 +45,22 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <ProductReadPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: `/product/`,
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProductAddPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: `/product/admin/list`,
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProductAdminListPage />
       </Suspense>
     ),
   },
