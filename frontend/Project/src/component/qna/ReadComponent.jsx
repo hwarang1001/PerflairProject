@@ -1,63 +1,80 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import qnaDummy from "../../data/qnaDummy";
+import qnaDummy from "../../data/qnaDummy"; 
 import "./ReadComponent.css";
 
 const ReadComponent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const isAdmin = true; // TODO: 로그인 연동 후 실제 admin 여부 판단
+  const isAdmin = true;
 
   const qna = qnaDummy.find((q) => q.id === Number(id));
-  const [answer, setAnswer] = useState(""); // 관리자 답변 입력용
-  const [hasAnswered, setHasAnswered] = useState(!!qna?.answer);
 
-  if (!qna) return <p>존재하지 않는 질문입니다.</p>;
-
-  const handleAnswerSubmit = () => {
-    alert(`답변 저장: ${answer}`);
-    setHasAnswered(true);
-    // 실제 API 연동 시 서버로 전송
-  };
+  if (!qna) {
+    return <p className="text-center">해당 질문을 찾을 수 없습니다.</p>;
+  }
 
   return (
-    <div className="qna-detail-container">
-      <h2 className="qna-detail-title">{qna.title}</h2>
-      <div className="qna-detail-meta">
-        <span>작성자: {qna.author}</span>
-        <span>작성일: {qna.date}</span>
-      </div>
+    <section className="py-5">
+      <div className="container px-4 px-lg-5">
+        {/* 상단 타이틀 */}
+        <div className="mb-5 text-center">
+          <h1 className="mb-5">Q&A</h1>
+          <hr />
+        </div>
 
-      <p className="qna-detail-content">{qna.content}</p>
+        {/* QnA 본문 */}
+        <div className="container-sm mt-5">
+          <h2>{qna.title}</h2>
+          <p className="notice-date">작성일: {qna.date}</p>
+          <p className="notice-content">{qna.content}</p>
 
-      <div className="qna-answer-section">
-        <h3>답변</h3>
-        {hasAnswered ? (
-          <div className="qna-answer-box">
-            <p>{qna.answer}</p>
-            <p className="qna-answer-meta">
-              답변자: {qna.answeredBy} | {qna.answeredAt}
-            </p>
+          {/* 답변 유무에 따른 UI */}
+          {qna.answer ? (
+            <div className="qna-answer-section">
+              <h5>답변</h5>
+              <p>{qna.answer}</p>
+              <p className="qna-answer-meta">
+                {qna.answeredAt} | 답변자: {qna.answeredBy}
+              </p>
+            </div>
+          ) : (
+            <div className="qna-answer-empty">
+              📭 아직 등록된 답변이 없습니다.
+            </div>
+          )}
+
+          {/* 하단 버튼 */}
+          <div className="notice-button-row mt-5">
+            <div className="button-back-left">
+              <button
+                className="btn btn-secondary"
+                onClick={() => navigate("/qna")}
+              >
+                목록으로 돌아가기
+              </button>
+            </div>
+
+            {isAdmin && (
+              <div className="button-group-right">
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => alert("수정 기능은 준비 중입니다.")}
+                >
+                  수정
+                </button>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => alert("삭제 기능은 준비 중입니다.")}
+                >
+                  삭제
+                </button>
+              </div>
+            )}
           </div>
-        ) : isAdmin ? (
-          <div className="qna-answer-form">
-            <textarea
-              placeholder="답변 내용을 입력하세요"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-            />
-            <button onClick={handleAnswerSubmit}>답변 등록</button>
-          </div>
-        ) : (
-          <p className="qna-waiting">답변 대기 중입니다.</p>
-        )}
+        </div>
       </div>
-
-      <button className="qna-back-button" onClick={() => navigate("/qna")}>
-        목록으로 돌아가기
-      </button>
-    </div>
+    </section>
   );
 };
 
