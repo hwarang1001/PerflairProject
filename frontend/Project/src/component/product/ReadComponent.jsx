@@ -12,7 +12,38 @@ const initState = {
   perfumeVol: 0,
   uploadFileNames: [],
 };
-
+const dummyReviews = [
+  {
+    reviewer: "유저1",
+    rating: 5,
+    content: "정말 좋은 향수예요!",
+    date: "2025-08-08",
+  },
+  {
+    reviewer: "유저2",
+    rating: 4,
+    content: "향이 오래가고 좋아요.",
+    date: "2025-08-08",
+  },
+  {
+    reviewer: "유저3",
+    rating: 3,
+    content: "무난해요.",
+    date: "2025-08-08",
+  },
+  {
+    reviewer: "유저4",
+    rating: 5,
+    content: "선물용으로 추천합니다.",
+    date: "2025-08-08",
+  },
+  {
+    reviewer: "유저5",
+    rating: 2,
+    content: "저는 별로였어요.",
+    date: "2025-08-08",
+  },
+];
 const ReadComponent = ({ pno }) => {
   const [count, setCount] = useState(1);
   const [total, setTotal] = useState(0);
@@ -40,13 +71,11 @@ const ReadComponent = ({ pno }) => {
   useEffect(() => {
     getOne(pno).then((data) => {
       setProduct(data);
-      console.log(data);
     });
   }, [pno]);
-
   return (
     <>
-      {/* Product section */}
+      {/* 상품장바구니, 결제 */}
       <section className="py-5">
         <div className="container px-4 px-lg-5 my-5">
           <div className="row gx-4 gx-lg-5 align-items-center justify-content-around">
@@ -119,11 +148,42 @@ const ReadComponent = ({ pno }) => {
         </div>
       </section>
 
-      {/* Related items section */}
+      {/* 상세정보 */}
       <section className="py-5 bg-light">
         <div className="container px-4 px-lg-5 mt-5">
           <h2 className="fw-bolder mb-4 text-center">상세정보</h2>
           <h6 className="text-center">{product.pdesc}</h6>
+        </div>
+      </section>
+      {/* 리뷰 리스트 카드 UI */}
+      <section className="py-5 bg-light">
+        <div className="container px-4 px-lg-5">
+          <h2 className="fw-bolder mb-4 text-center">리뷰</h2>
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+            {dummyReviews.map((review, idx) => (
+              <div className="col" key={idx}>
+                <div className="card h-100 shadow-sm">
+                  <div className="card-body">
+                    <img
+                      src={`${API_SERVER_HOST}/api/product/view/${product.uploadFileNames[0]}`}
+                      className="card-img mb-3"
+                    />
+                    <h6 className="card-title mb-1">{review.reviewer}</h6>
+                    <p className="mb-2">
+                      <span className="text-warning">
+                        {"★".repeat(review.rating)}
+                      </span>
+                      <span className="text-muted">
+                        {"☆".repeat(5 - review.rating)}
+                      </span>
+                    </p>
+                    <p className="card-text text-muted">{review.content}</p>
+                    <p className="card-text text-muted fs-6">{review.date}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </>

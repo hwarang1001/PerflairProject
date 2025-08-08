@@ -81,6 +81,11 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 		if (path.startsWith("/api/products/view/")) {
 			return true;
 		}
+		
+		// 테스트용 권한X
+		if (path.startsWith("/api/product/")) {
+			return true;
+		}
 		return false;
 	}
 
