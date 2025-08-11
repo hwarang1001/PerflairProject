@@ -1,6 +1,10 @@
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../App.css";
+import { useSelector } from "react-redux";
 const Header = () => {
+  const loginState = useSelector((state) => state.login);
+  console.log("loginState:", loginState);
+  const name = loginState?.name;
   return (
     <>
       {/* 상단 네비게이션 바 */}
@@ -75,9 +79,18 @@ const Header = () => {
             </ul>
 
             {/* 로그인 버튼 (JSP 조건부 로직은 React에서는 상태로 처리해야 함) */}
-            <a className="nav-link" href="/login">
-                  로그인
-                </a>
+            {loginState.name ? (
+              // 로그인 되었을 때 UI
+              <>
+                <span>{name}님 환영합니다.</span>
+                <button>로그아웃</button>
+              </>
+            ) : (
+              // 로그인 안 됐을 때 UI
+              <a href="/login" className="nav-link">
+                로그인
+              </a>
+            )}
           </div>
         </div>
       </nav>
