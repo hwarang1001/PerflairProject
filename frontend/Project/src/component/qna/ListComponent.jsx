@@ -1,11 +1,36 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import useCustomLogin from "../../hook/useCustomLogin";
 import "./ListComponent.css";
 import "../../App.css";
 import qnaDummy from "../../data/qnaDummy";
 
-const QnaList = () => {
+
+  
+  const ListComponent = () => {
   const isAdmin = true;
+  const [qnaList, setQnaList] = useState([]);
+  const { exceptionHandle, loginState } = useCustomLogin();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loginState || !loginState.userId) {
+      // 로그인 안 된 경우 로그인 페이지로 강제 이동
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+
+    axios
+      .get("/qna") // 실제 API 주소 넣기
+      .then((res) => {
+        setQnaList(res.data);
+      })
+      .catch((err) => {
+        exceptionHandle(err); // 에러 공통 처리
+      });
+  }, [loginState, navigate, exceptionHandle]);
 
   return (
     <section className="py-5">
@@ -55,4 +80,4 @@ const QnaList = () => {
   );
 };
 
-export default QnaList;
+export default ListComponent;

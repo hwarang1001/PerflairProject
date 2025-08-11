@@ -1,12 +1,17 @@
+/* 컨테이너: 화면 중앙 정렬 및 배경 */
 .register-container {
   background-color: white;
-  min-height: 110vh;
+  flex: 1; /* ✅ 레이아웃에서 남은 공간만큼 차지 */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: "Noto Sans KR", sans-serif;
+  padding: 40px 0; /* ✅ 상하 여백 */
+  box-sizing: border-box;
+  overflow: auto; /* ✅ 내용이 넘칠 경우 스크롤 */
 }
 
+/* 회원가입 박스 */
 .register-box {
   background-color: #ffffff;
   padding: 40px 55px;
@@ -14,11 +19,14 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 500px;
-  height: 80%;
+  height: auto;
   max-height: 700px;
   text-align: center;
+  box-sizing: border-box;
+  overflow: auto;
 }
 
+/* 제목 */
 .register-box h2 {
   margin-top: 15px;
   margin-bottom: 50px;
@@ -27,12 +35,14 @@
   font-weight: 600;
 }
 
+/* 폼 */
 .register-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* 입력창 */
 .register-form input {
   padding: 12px;
   font-size: 16px;
@@ -40,8 +50,11 @@
   border-radius: 8px;
   background-color: #ffffff;
   outline: none;
+  width: 100%; /* ✅ 박스 너비에 맞춤 */
+  box-sizing: border-box;
 }
 
+/* 버튼 */
 .register-form button {
   padding: 12px 20px;
   font-size: 16px;
@@ -53,6 +66,8 @@
   font-weight: 500;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .register-form button:hover {
@@ -62,12 +77,14 @@
   transform: translateY(-1px);
 }
 
+/* 에러 메시지 */
 .register-error {
   color: #c62828;
   font-weight: bold;
   margin-top: 10px;
 }
 
+/* 주소찾기 버튼 */
 .address-button {
   width: 100%;
   padding: 12px;
@@ -79,10 +96,19 @@
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s;
+  box-sizing: border-box;
 }
 
 .address-button:hover {
   background-color: #8b6744;
+}
+
+/* 주소 input 그룹 */
+.address-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 /* 모달 오버레이 */
@@ -103,39 +129,52 @@
 .modal-content {
   background: white;
   border-radius: 8px;
-  padding: 50px 20px 20px 20px; /* 위쪽에 여유 공간 */
+  padding: 50px 20px 20px 20px;
   width: 400px;
   max-width: 90vw;
   height: 400px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   position: relative;
+  box-sizing: border-box;
+  overflow: auto;
 }
 
+/* 모달 닫기 버튼 */
 .modal-close-button {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: white; /* 배경 하얀색 */
+  background: white;
   border: none;
-  color: #888888; /* 연한 회색 */
+  color: #888888;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
   font-size: 16px;
-  box-shadow: none;
   transition: color 0.3s, background-color 0.3s;
   z-index: 10;
 }
 
 .modal-close-button:hover {
-  color: #555555; /* 마우스 올리면 진한 회색 */
-  background-color: #f0f0f0; /* 아주 연한 회색 배경 */
+  color: #555555;
+  background-color: #f0f0f0;
 }
 
-.address-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px; /* 각 input들 사이 간격 */
-  margin-bottom: 16px; /* 그룹 아래 간격을 기존 input 간격과 맞춤 */
+/* 반응형 대응 */
+@media (max-width: 480px) {
+  .register-box {
+    padding: 24px 16px;
+  }
+
+  .register-box h2 {
+    font-size: 20px;
+  }
+
+  .register-form input,
+  .register-form button,
+  .address-button {
+    font-size: 14px;
+    padding: 10px;
+  }
 }

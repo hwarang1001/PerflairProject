@@ -1,29 +1,41 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./LoginComponent.css";
-
+import { useDispatch } from "react-redux";
+import { loginPostAsync } from "../../slice/LoginSlice";
+import { useNavigate } from "react-router-dom";
 const LoginComponent = () => {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // 일반 로그인 처리 함수
   const handleLogin = (e) => {
     e.preventDefault();
 
-    const validId = "testuser";
-    const validPassword = "1234";
-
-    if (id === validId && password === validPassword) {
-      setIsSuccess(true);
-      setMessage("로그인 성공!");
-    } else {
-      setIsSuccess(false);
-      setMessage("아이디 또는 비밀번호가 일치하지 않습니다.");
-    }
+    dispatch(loginPostAsync({ userId: id, pw: password }))
+      .unwrap()
+      .then((data) => {
+        if (data.error) {
+          // 실패 처리
+          setIsSuccess(false);
+          setMessage("이메일과 패스워드를 다시 확인하세요");
+        } else {
+          // 성공 처리
+          setIsSuccess(true);
+          setMessage("로그인 성공!");
+          navigate("/", { replace: true });
+        }
+      })
+      .catch((error) => {
+        // 네트워크 오류 등 예외 상황
+        setIsSuccess(false);
+        setMessage("서버 오류가 발생했습니다.");
+      });
   };
-
   // 추후 카카오 로그인 API 연동 예정
   const handleKakaoLogin = () => {
     alert("카카오 로그인은 추후 연동될 예정입니다.");

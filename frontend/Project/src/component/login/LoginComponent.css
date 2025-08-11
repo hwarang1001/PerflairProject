@@ -1,12 +1,17 @@
+/* 컨테이너: 화면 중앙 정렬 및 배경 */
 .login-container {
   background-color: white;
-  height: 80vh;
+  flex: 1; /* ✅ 메인 콘텐츠 영역이 남은 공간 차지 */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: "Noto Sans KR", sans-serif;
+  padding: 40px 0; /* ✅ 위아래 여유 공간 */
+  box-sizing: border-box;
+  overflow: auto; /* ✅ 콘텐츠가 커질 경우 스크롤 */
 }
 
+/* 로그인 박스 */
 .login-form-box {
   background-color: #ffffff;
   padding: 40px 55px;
@@ -14,11 +19,14 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 500px;
-  height: 80%;
+  height: auto;
   max-height: 500px;
   text-align: center;
+  box-sizing: border-box;
+  overflow: auto;
 }
 
+/* 제목 */
 .login-title {
   margin-top: 15px;
   margin-bottom: 50px;
@@ -27,12 +35,14 @@
   font-weight: 600;
 }
 
+/* 폼 레이아웃 */
 .login-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* 입력창 */
 .login-input {
   padding: 12px;
   font-size: 16px;
@@ -40,19 +50,24 @@
   border-radius: 8px;
   background-color: #ffffff;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* 로그인 버튼 */
 .login-button {
   padding: 12px 20px;
   font-size: 16px;
-  background-color: #f5f5f5; /* 밝은 회색톤 */
-  color: #333333; /* 진한 그레이 텍스트 */
+  background-color: #f5f5f5;
+  color: #333333;
   border: 1px solid #dddddd;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 500;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .login-button:hover {
@@ -62,7 +77,7 @@
   transform: translateY(-1px);
 }
 
-
+/* 로그인 메시지 */
 .login-message {
   margin-top: 16px;
   font-weight: bold;
@@ -76,6 +91,7 @@
   color: #c62828;
 }
 
+/* 하단 링크 */
 .login-links {
   margin-top: 20px;
   font-size: 14px;
@@ -93,7 +109,7 @@
   color: #b8a89f;
 }
 
-/* 일시적으로 UI만 구현 */
+/* 카카오 로그인 버튼 */
 .kakao-login-button {
   margin-top: 12px;
   padding: 12px;
@@ -103,7 +119,26 @@
   font-weight: bold;
   border: none;
   border-radius: 8px;
-  cursor: not-allowed; /* 기능 없음 표시용 */
+  cursor: not-allowed;
   font-size: 16px;
   opacity: 0.9;
+  box-sizing: border-box;
+}
+
+/* 반응형 대응 */
+@media (max-width: 480px) {
+  .login-form-box {
+    padding: 24px 16px;
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+
+  .login-input,
+  .login-button,
+  .kakao-login-button {
+    font-size: 14px;
+    padding: 10px;
+  }
 }
