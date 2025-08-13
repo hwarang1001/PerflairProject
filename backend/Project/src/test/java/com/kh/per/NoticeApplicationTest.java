@@ -24,7 +24,7 @@ class NoticeApplicationTest {
 	@Autowired
 	NoticeService noticeService;
 
-	// @Test
+//	 @Test
 	public void insertTest() {
 		NoticeDTO noticeDTO = NoticeDTO.builder().title("test").content("공지사항 테스트").build();
 

@@ -14,7 +14,7 @@ import com.kh.domain.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-	@EntityGraph(attributePaths = { "imageList" })
+	@EntityGraph(attributePaths = { "imageList", "options" })
 	@Query("select p from Product p where p.pno = :pno")
 	Optional<Product> selectOne(@Param("pno") Long pno);
 
@@ -22,7 +22,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	@Modifying
 	@Query("update Product p set p.delFlag = :flag where p.pno = :pno")
 	void updateToDelete(@Param("pno") Long pno, @Param("flag") boolean flag);
-	
-	@Query("select p, pi from Product p left join p.imageList pi where pi.ord = 0 and p.delFlag = false ")
+
+	// 리스트에 첫번째 이미지(ord=0) + 가격이 가장 낮은 옵션 출력
+	@Query("select p, pi, op from Product p " + "left join p.imageList pi on pi.ord = 0 " + "left join p.options op "
+			+ "where p.delFlag = false and op.price = ("
+			+ " select min(o.price) from ProductOption o where o.product = p" + ")")
 	Page<Object[]> selectList(Pageable pageable);
 }
