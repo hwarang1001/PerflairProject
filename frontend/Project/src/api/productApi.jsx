@@ -1,17 +1,19 @@
 import axios from "axios";
-import jwtAxios from "../util/jwtUtil";
+
 //서버 주소
 export const API_SERVER_HOST = "http://localhost:8080";
 const prefix = `${API_SERVER_HOST}/api/product`;
 
-const apiClient = axios.create({
-  baseURL: `${API_SERVER_HOST}/api/product`,
-  withCredentials: true, // 쿠키나 인증 헤더 포함해서 요청
-});
 export const postAdd = async (product) => {
   //파일업로드 할때에는 기본값인  ‘Content-Type’: ‘application/json’을 ‘multipart/form-data’ 변경해야됨
   const header = { headers: { "Content-Type": "multipart/form-data" } };
-  const res = await jwtAxios.post(`${prefix}/`, product, header);
+  const res = await axios.post(`${prefix}/`, product, header);
+  return res.data;
+};
+
+export const putModify = async (pno, product) => {
+  const header = { headers: { "Content-Type": "multipart/form-data" } };
+  const res = await axios.put(`${prefix}/${pno}`, product, header);
   return res.data;
 };
 
@@ -25,5 +27,10 @@ export const getList = async (pageParam) => {
   const res = await axios.get(`${prefix}/list`, {
     params: { page: page, size: size },
   });
+  return res.data;
+};
+
+export const deleteRemove = async (pno) => {
+  const res = await axios.delete(`${prefix}/${pno}`);
   return res.data;
 };
