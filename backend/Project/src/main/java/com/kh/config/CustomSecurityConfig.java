@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,10 +16,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.kh.repository.MemberRepository;
 import com.kh.security.filter.JWTCheckFilter;
-import com.kh.security.handler.APILoginFailHandler;
 import com.kh.security.handler.APILoginSuccessHandler;
-import com.kh.security.handler.CustomAccessDeniedHandler;
+import com.kh.util.JWTUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,30 +27,43 @@ import lombok.extern.log4j.Log4j2;
 @Configuration
 @Log4j2
 @RequiredArgsConstructor
+@EnableWebSecurity // 👈 WebSecurity 설정을 활성화합니다.
 @EnableMethodSecurity
 public class CustomSecurityConfig {
+
+	private final MemberRepository memberRepository;
+
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		log.info(" scrurityConfig ");
-		http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-		// 세션을 생성하지 않음(stateless). JWT 같은 토큰 기반 인증 시스템에서 사용된다.
-		// 로그인 상태를 서버 세션으로 저장하지 않고, 매 요청마다 인증 정보를 전달해야 한다.
-		http.sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-		// CSRF(Cross-Site Request Forgery) 보호 기능을 비활성화
-		// REST API 서버에서는 일반적으로 CSRF 보호가 필요 없기 때문에 끄는 것이 일반적이다
-		http.csrf(config -> config.disable());
+	public JWTUtil jwtUtil() {
+		return new JWTUtil();
+	}
 
-		http.formLogin(config -> {
-			config.loginPage("/api/member/login");
-			config.successHandler(new APILoginSuccessHandler());
-			config.failureHandler(new APILoginFailHandler());
-		});
-		// JWT 체크 추가
-		http.addFilterBefore(new JWTCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+	@Bean
+	public JWTCheckFilter jwtCheckFilter(JWTUtil jwtUtill) {
+		// new 키워드를 사용해 직접 객체를 생성하여 반환합니다.
+		// 이때, 의존성 주입이 필요한 MemberRepository를 파라미터로 넘겨줍니다.
+		return new JWTCheckFilter(memberRepository, jwtUtill);
+	}
 
-		http.exceptionHandling(config -> {
-			config.accessDeniedHandler(new CustomAccessDeniedHandler());
-		});
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http, JWTCheckFilter jwtCheckFilter) throws Exception {
+		log.info("-------------------- security config ---------------------------------------");
+
+		http.csrf(config -> config.disable())
+				.sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.cors(config -> config.configurationSource(corsConfigurationSource()))
+				// 💡 formLogin() 설정을 유지하고, 성공/실패 핸들러를 지정합니다.
+				.formLogin(config -> {
+					config.loginPage("/api/member/login");
+					config.successHandler(new APILoginSuccessHandler());
+				}).authorizeHttpRequests(config -> {
+					config.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/member/login",
+							"/api/member/signup", "/api/notice/**").permitAll().requestMatchers("/api/member/me")
+							.authenticated().anyRequest().permitAll();
+				})
+				// JWTCheckFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
+				.addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class);
+
 		return http.build();
 	}
 
@@ -59,9 +73,9 @@ public class CustomSecurityConfig {
 		configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 		configuration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE"));
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache- Control", "Content-Type"));
-		// 자격 증명(쿠키, 인증 헤더 등)을 CORS 요청과 함께 보낼 수 있도록 허용
+// 자격 증명(쿠키, 인증 헤더 등)을 CORS 요청과 함께 보낼 수 있도록 허용
 		configuration.setAllowCredentials(true);
-		// URL 패턴에 따라 CORS 설정을 매핑할 수 있는 객체
+// URL 패턴에 따라 CORS 설정을 매핑할 수 있는 객체
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;

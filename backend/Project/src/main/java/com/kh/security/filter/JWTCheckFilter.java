@@ -4,59 +4,101 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.google.gson.Gson;
+import com.kh.domain.Member;
 import com.kh.dto.MemberDTO;
+import com.kh.repository.MemberRepository;
 import com.kh.util.JWTUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
+
+@RequiredArgsConstructor
 public class JWTCheckFilter extends OncePerRequestFilter {
+
+	private static final List<String> EXCLUDE_URLS = List.of("/api/product/list", "/api/member/login",
+			"/api/member/register");
+
+	private final MemberRepository memberRepository;
+	private final JWTUtil jwtUtil;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		log.info("--------------------  JWTCheckFilter ------------------------------------------------------ ");
+
+		String path = request.getRequestURI();
+		log.info("JWTCheckFilter 실행: {}", path);
+		log.info("현재 인증 상태: {}", SecurityContextHolder.getContext().getAuthentication());
+
+		// Authorization 헤더를 가져온다.
 		String authHeaderStr = request.getHeader("Authorization");
+		log.info("Authorization Header: " + authHeaderStr);
+
+		// ⭐️ 수정된 부분: 헤더가 null이거나 'Bearer '로 시작하지 않으면, 다음 필터로 넘긴다.
+		// 이렇게 하면 헤더가 없는 요청은 인증이 필요한 곳에서 처리된다.
+		// ⭐️ 수정된 부분: 헤더가 없거나 'Bearer '로 시작하지 않으면, 다음 필터로 넘긴다.
+		if (authHeaderStr == null || !authHeaderStr.startsWith("Bearer ")) {
+			filterChain.doFilter(request, response);
+			return;
+		}
+
 		try {
-			// Bearer accestoken ............... 토큰이 정상적이면 그대로 요구사항진행
+			// 'Bearer ' 부분을 제외한 토큰만 추출
 			String accessToken = authHeaderStr.substring(7);
 			Map<String, Object> claims = JWTUtil.validateToken(accessToken);
-			log.info("JWT claims: " + claims);
-			// filterChain.doFilter(request, response); //이하 추가
+			log.info("!!!!!!!!!!!!!!!JWT claims: " + claims);
+
 			String userId = (String) claims.get("userId");
+
+			Optional<Member> memberOptional = memberRepository.findById(userId);
+
+			if (!memberOptional.isPresent()) {
+				log.warn("DB에서 회원을 찾지 못했습니다. 요청된 ID: " + userId);
+				throw new IllegalArgumentException("회원이 존재하지 않습니다.");
+			}
 			String name = (String) claims.get("name");
-			// 🔑 JWT 클레임에 없는 필드에 대해 null 대신 기본값 설정
-		    String address = (String) claims.getOrDefault("address", "");
-		    String phoneNum = (String) claims.getOrDefault("phoneNum", "");
-		    Boolean social = (Boolean) claims.getOrDefault("social", false);
+
+			String address = (String) claims.getOrDefault("address", "");
+			String phoneNum = (String) claims.getOrDefault("phoneNum", "");
+			Boolean social = (Boolean) claims.getOrDefault("social", false);
 			List<String> roleNames = (List<String>) claims.get("roleNames");
-			MemberDTO memberDTO = new MemberDTO(userId, "", name,address,phoneNum, social.booleanValue(), roleNames);
-			log.info(" ----------------------------------------------------------------- ");
-			log.info(memberDTO);
-			log.info(memberDTO.getAuthorities());
-			// 스프링 시큐리티에서 인증 정보를 담는 객체
+
+			MemberDTO memberDTO = new MemberDTO(userId, "", name, address, phoneNum, social.booleanValue(), roleNames);
+
 			UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberDTO,
 					null, memberDTO.getAuthorities());
-			// 이 객체를 SecurityContextHolder에 넣으면,
-			// 해당 요청은 인증된 사용자로 처리됨
+
 			SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+			try {
+				log.info(memberDTO);
+				log.info(memberDTO.getAuthorities());
+			} catch (Exception e) {
+				log.error("로그 출력 중 에러 발생: " + e.getMessage(), e);
+			}
+
 			filterChain.doFilter(request, response);
+
 		} catch (Exception e) {
 			log.error("JWT Check Error .................................... ");
 			log.error(e.getMessage());
 			Gson gson = new Gson();
 			String msg = gson.toJson(Map.of("error", "ERROR_ACCESS_TOKEN"));
+
 			response.setContentType("application/json");
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+
 			PrintWriter printWriter = response.getWriter();
 			printWriter.println(msg);
 			printWriter.close();
@@ -73,17 +115,17 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
 		String path = request.getRequestURI();
 		log.info("check uri. .............. " + path);
-		// api/member/ 경로의 호출은 체크하지 않음
-		if (path.startsWith("/api/member/")) {
-			return true;
-		}
 		// 이미지 조회 경로는 체크하지 않하고 싶을 때
-		if (path.startsWith("/api/products/view/")) {
+		if (path.startsWith("/api/product/view/")) {
 			return true;
 		}
-		
-		// 테스트용 권한X
 		if (path.startsWith("/api/product/")) {
+			return true;
+		}
+		if (path.startsWith("/api/member/login") || path.startsWith("/api/member/register")) {
+			return true;
+		}
+		if (path.startsWith("/api/member/signup")) {
 			return true;
 		}
 		return false;
