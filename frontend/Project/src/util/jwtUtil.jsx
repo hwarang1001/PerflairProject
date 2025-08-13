@@ -29,7 +29,6 @@ const beforeReq = (config) => {
   }
   const memberObj =
     typeof memberInfo === "string" ? JSON.parse(memberInfoStr) : memberInfoStr;
-
   config.headers.Authorization = `Bearer ${memberObj.accessToken}`;
   return config;
 };
