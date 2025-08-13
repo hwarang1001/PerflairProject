@@ -6,15 +6,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,68 +29,68 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 @Log4j2
 @RequestMapping("/api/product")
-
 public class ProductController {
 
 	private final ProductService productService;
 	private final CustomFileUtil fileUtil;
 
 	@PostMapping("/")
-	public Map<String, Long> register(@ModelAttribute ProductDTO productDTO,
-			@RequestParam("files") List<MultipartFile> files) {
+	// multipart/form-data 요청에서 JSON(또는 다른 미디어 타입) 파트를 객체로 변환해서 받음
+	public Map<String, Long> register(@RequestPart("productDTO") ProductDTO productDTO,
+			@RequestPart("files") List<MultipartFile> files) {
 
-		log.info("received files: {}", files);
+		log.info("Received productDTO: {}", productDTO);
+		log.info("Received files: {}", files);
+
+		// 파일 저장
 		List<String> uploadFileNames = fileUtil.saveFiles(files);
 		productDTO.setUploadFileNames(uploadFileNames);
 
+		// 상품 등록
 		Long pno = productService.register(productDTO);
+
 		return Map.of("result", pno);
 	}
+
 	@GetMapping("/view/{fileName}")
 	public ResponseEntity<Resource> viewFileGET(@PathVariable String fileName) {
 		return fileUtil.getFile(fileName);
 	}
+
 //	@PreAuthorize("hasRole('ROLE_ADMIN')") 
 	@GetMapping("/list")
 	public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
 		log.info("list............." + pageRequestDTO);
 		return productService.list(pageRequestDTO);
 	}
-	
+
 	@GetMapping("/{pno}")
 	public ProductDTO read(@PathVariable(name = "pno") Long pno) {
 		return productService.get(pno);
 	}
+
 	@PutMapping("/{pno}")
-	public Map<String, String> modify(@PathVariable(name = "pno") Long pno, ProductDTO productDTO) {
+	public Map<String, String> modify(@PathVariable Long pno, @RequestPart("productDTO") ProductDTO productDTO,
+			@RequestPart(value = "files", required = false) List<MultipartFile> files) {
 		productDTO.setPno(pno);
 		ProductDTO oldProductDTO = productService.get(pno);
-		// 기존파일들 (데이터베이스에 존재하는 파일들-수정 과정에서 삭제되었을 수 있음)
-		List<String> oldFileNames = oldProductDTO.getUploadFileNames();
-		// 새로 업로드 해야 하는 파일들
-		List<MultipartFile> files = productDTO.getFiles();
-		// 새로 업로드되어서 만들어진 파일 이름들
-		List<String> currentUploadFileNames = fileUtil.saveFiles(files);
-		// 화면에서 변화 없이 계속 유지된 파일들
-		List<String> uploadedFileNames = productDTO.getUploadFileNames();
-		// 유지되는 파일들 + 새로 업로드된 파일 이름들이 저장해야 하는 파일 목록이 됨
-		if (currentUploadFileNames != null && currentUploadFileNames.size() > 0) {
-			uploadedFileNames.addAll(currentUploadFileNames);
+		List<String> oldFileNames = oldProductDTO.getUploadFileNames(); // 기존 파일
+		List<String> currentUploadFileNames = fileUtil.saveFiles(files); // 새 업로드된 파일들
+		List<String> uploadedFileNames = productDTO.getUploadFileNames(); // 유지된 파일들 (클라이언트에서 전달됨)
+		if (currentUploadFileNames != null && !currentUploadFileNames.isEmpty()) {
+			uploadedFileNames.addAll(currentUploadFileNames); // 유지 + 신규 업로드된 파일 합치기
 		}
-		// 수정 작업
+		productDTO.setUploadFileNames(uploadedFileNames); // 최종 저장할 파일 목록으로 설정
+		// 실제 DB 수정
 		productService.modify(productDTO);
-		if (oldFileNames != null && oldFileNames.size() > 0) {
-			// 지워야 하는 파일 목록 찾기
-			// 예전 파일들 중에서 지워져야 하는 파일이름들
-			List<String> removeFiles = oldFileNames.stream()
-					.filter(fileName -> uploadedFileNames.indexOf(fileName) == -1).collect(Collectors.toList());
-			// 실제 파일 삭제
-			fileUtil.deleteFiles(removeFiles);
-		}
+		// 삭제할 파일 식별
+		List<String> removeFiles = oldFileNames.stream().filter(name -> !uploadedFileNames.contains(name)).toList();
+		fileUtil.deleteFiles(removeFiles); // 삭제
+
 		return Map.of("RESULT", "SUCCESS");
 	}
-	 
-	@DeleteMapping("/{pno}") 
+
+	@DeleteMapping("/{pno}")
 	public Map<String, String> remove(@PathVariable("pno") Long pno) {
 		// 삭제해야 할 파일들 알아내기
 		List<String> oldFileNames = productService.get(pno).getUploadFileNames();
