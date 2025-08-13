@@ -12,4 +12,5 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 	@EntityGraph(attributePaths = { "memberRoleList" })
 	@Query("select m from Member m where m.userId= :userId")
 	Member getWithRoles(@Param("userId") String userId);
+	
 }

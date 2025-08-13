@@ -3,8 +3,7 @@ package com.kh.service;
 import com.kh.dto.NoticeDTO;
 import com.kh.dto.PageRequestDTO;
 import com.kh.dto.PageResponseDTO;
-//import com.kh.dto.PageRequestDTO;
-//import com.kh.dto.PageResponseDTO;
+
 
 public interface NoticeService {
 	

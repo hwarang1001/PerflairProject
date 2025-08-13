@@ -18,6 +18,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
 
 	// 삭제되지 않은(delFlag = false) 공지사항 목록을 페이징 처리하여 조회
 	// JPQL을 사용하여 Notice 엔티티를 직접 조회합니다.
-	@Query("SELECT n FROM Notice n WHERE n.delFlag = false")
+	@Query("SELECT n FROM Notice n WHERE n.delFlag = false ORDER BY n.noticeId DESC")
 	Page<Notice> findAllNotDeleted(Pageable pageable);
 }
