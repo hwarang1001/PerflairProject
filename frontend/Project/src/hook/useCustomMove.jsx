@@ -38,20 +38,52 @@ const useCustomMove = () => {
     setRefresh(!refresh); //추가
   };
 
-  const moveToModify = (num) => {
+  const moveToAdminList = (pageParam) => {
+    let queryStr = "";
+    if (pageParam) {
+      const pageNum = getNum(pageParam.page, page);
+      const sizeNum = getNum(pageParam.size, size);
+      queryStr = createSearchParams({
+        page: pageNum,
+        size: sizeNum,
+      }).toString();
+    } else {
+      queryStr = queryDefault;
+    }
+
+    navigate({
+      pathname: `../product/admin/list`,
+      search: queryStr,
+    });
+    setRefresh(!refresh); //추가
+  };
+
+  const moveToAdd = () => {
     console.log(queryDefault);
     navigate({
-      pathname: `../todo/modify/${num}`,
-      search: queryDefault, //수정시에 기존의 쿼리 스트링 유지를 위해
+      pathname: "../product/add",
     });
   };
 
   const moveToRead = (num) => {
     navigate({
-      pathname: `../todo/read/${num}`,
-      search: queryDefault, //수정시에 기존의 쿼리 스트링 유지를 위해
+      pathname: `../product/read/${num}`,
     });
   };
-  return { moveToList, moveToModify, moveToRead, page, size }; //moveToModify 추가
+
+  const moveToModify = (num) => {
+    navigate({
+      pathname: `../product/modify/${num}`,
+    });
+  };
+  return {
+    moveToList,
+    moveToModify,
+    moveToAdminList,
+    moveToAdd,
+    moveToRead,
+    page,
+    size,
+  }; //moveToModify 추가
 };
 export default useCustomMove;

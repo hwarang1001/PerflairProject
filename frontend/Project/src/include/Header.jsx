@@ -76,6 +76,11 @@ const Header = () => {
                   질의응답
                 </a>
               </li>
+              <li className="nav-item">
+                <a className="nav-link" href="/product/admin/list">
+                  상품 관리
+                </a>
+              </li>
             </ul>
 
             {/* 로그인 버튼 (JSP 조건부 로직은 React에서는 상태로 처리해야 함) */}

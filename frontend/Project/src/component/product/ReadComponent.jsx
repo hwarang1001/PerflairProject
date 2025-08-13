@@ -3,15 +3,16 @@ import "../../App.css";
 import ProductCarousel from "../../include/ProductCarousel";
 import { getOne } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/productApi";
+
 const initState = {
   pno: 0,
+  brand: "",
   pname: "",
-  price: 0,
   pdesc: "",
-  stock: 0,
-  perfumeVol: 0,
   uploadFileNames: [],
+  options: [],
 };
+
 const dummyReviews = [
   {
     reviewer: "유저1",
@@ -25,12 +26,7 @@ const dummyReviews = [
     content: "향이 오래가고 좋아요.",
     date: "2025-08-08",
   },
-  {
-    reviewer: "유저3",
-    rating: 3,
-    content: "무난해요.",
-    date: "2025-08-08",
-  },
+  { reviewer: "유저3", rating: 3, content: "무난해요.", date: "2025-08-08" },
   {
     reviewer: "유저4",
     rating: 5,
@@ -44,35 +40,59 @@ const dummyReviews = [
     date: "2025-08-08",
   },
 ];
+
 const ReadComponent = ({ pno }) => {
   const [count, setCount] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0); // 선택된 옵션 index
   const [product, setProduct] = useState(initState);
+
+  const options = product.options || [];
+
+  // 총 가격 계산
   useEffect(() => {
-    setTotal(count * product.price);
-  }, [count, product.price]);
+    if (options.length > 0) {
+      setTotal(count * options[selectedIndex].price);
+    }
+  }, [count, selectedIndex, options]);
+
   // + 버튼
   const handleIncrement = () => {
-    setCount((prev) => (prev >= product.stock ? prev : prev + 1)); // 재고보다 많으면 증가 안됨
+    if (options.length > 0) {
+      setCount((prev) =>
+        prev >= options[selectedIndex].stock ? prev : prev + 1
+      );
+    }
   };
 
   // - 버튼
   const handleDecrement = () => {
     setCount((prev) => (prev > 1 ? prev - 1 : 1));
   };
+
+  // 직접 입력
   const handleChange = (e) => {
     const value = parseInt(e.target.value);
-    if (!isNaN(value) && value >= 1 && product.stock >= value) {
+    if (
+      !isNaN(value) &&
+      value >= 1 &&
+      options.length > 0 &&
+      options[selectedIndex].stock >= value
+    ) {
       setCount(value);
     } else if (e.target.value === "") {
       setCount("");
     }
   };
+
+  // 데이터 가져오기
   useEffect(() => {
     getOne(pno).then((data) => {
+      console.log(data);
       setProduct(data);
     });
   }, [pno]);
+
   return (
     <>
       {/* 상품장바구니, 결제 */}
@@ -88,13 +108,41 @@ const ReadComponent = ({ pno }) => {
               />
             </div>
             <div className="col-md-5 align-content-center">
-              <h1 className="display-6 fw-bolder mb-3">{product.pname}</h1>
-              <div className="fs-5 mb-3">
-                <span> {product.price.toLocaleString()}원</span>
+              <h3 className="fw-bolder mb-3">{product.brand}</h3>
+              <h1 className="fw-bolder mb-3">{product.pname}</h1>
+
+              {/* 현재 가격 */}
+              <div className="fs-5 mb-4">
+                {options.length > 0 && (
+                  <span>{options[selectedIndex].price.toLocaleString()}원</span>
+                )}
+                <hr />
               </div>
-              <hr />
+
+              {/* 옵션 선택 */}
+              <div className="mb-4 d-flex flex-wrap gap-3">
+                {options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setSelectedIndex(idx);
+                      setCount(1); // 옵션 변경 시 수량 초기화
+                    }}
+                    className={`flex flex-col items-center text-center px-4 py-2 border rounded ${
+                      selectedIndex === idx
+                        ? "border-2 border-blue-500"
+                        : "bg-white text-gray-800 border-gray-300"
+                    }`}
+                  >
+                    {opt.perfumeVol}ml <br /> {opt.price.toLocaleString()}원
+                  </button>
+                ))}
+              </div>
+              {/* 수량 조절 */}
               <div className="mb-5 bg-gradient">
-                <h5 className="mb-5">수량</h5>
+                <h5 className="mb-3">수량</h5>
+
                 <div className="d-flex justify-content-between">
                   <div className="input-group" style={{ maxWidth: "120px" }}>
                     <button
@@ -127,6 +175,8 @@ const ReadComponent = ({ pno }) => {
                 </div>
                 <hr />
               </div>
+
+              {/* 버튼 */}
               <div className="d-flex justify-content-center gap-3">
                 <button
                   className="btn btn-dark flex-shrink-0 p-3"
@@ -155,7 +205,8 @@ const ReadComponent = ({ pno }) => {
           <h6 className="text-center">{product.pdesc}</h6>
         </div>
       </section>
-      {/* 리뷰 리스트 카드 UI */}
+
+      {/* 리뷰 */}
       <section className="py-5 bg-light">
         <div className="container px-4 px-lg-5">
           <h2 className="fw-bolder mb-4 text-center">리뷰</h2>
@@ -164,10 +215,12 @@ const ReadComponent = ({ pno }) => {
               <div className="col" key={idx}>
                 <div className="card h-100 shadow-sm">
                   <div className="card-body">
-                    <img
-                      src={`${API_SERVER_HOST}/api/product/view/${product.uploadFileNames[0]}`}
-                      className="card-img mb-3"
-                    />
+                    {product.uploadFileNames.length > 0 && (
+                      <img
+                        src={`${API_SERVER_HOST}/api/product/view/${product.uploadFileNames[0]}`}
+                        className="card-img mb-3"
+                      />
+                    )}
                     <h6 className="card-title mb-1">{review.reviewer}</h6>
                     <p className="mb-2">
                       <span className="text-warning">

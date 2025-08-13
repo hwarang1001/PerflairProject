@@ -1,25 +1,24 @@
-import { useRef, useState } from "react";
-import { postAdd } from "../../api/productApi";
+import { useEffect, useRef, useState } from "react";
+import { API_SERVER_HOST, getOne, putModify } from "../../api/productApi";
 import useCustomMove from "../../hook/useCustomMove";
+import { useParams } from "react-router-dom";
 
-const initState = () => ({
+const host = API_SERVER_HOST;
+
+const initState = {
+  pno: 0,
   brand: "",
   pname: "",
   pdesc: "",
-  options: [
-    {
-      price: 0,
-      stock: 0,
-      perfumeVol: 0,
-    },
-  ],
-});
+  uploadFileNames: [],
+  options: [],
+};
 
-const AddComponent = () => {
+const ModifyComponent = () => {
   const [product, setProduct] = useState(initState);
+  const { pno } = useParams();
   const uploadRef = useRef();
   const { moveToAdminList } = useCustomMove();
-  console.log(initState);
 
   const handleChangeProduct = (e) => {
     const { name, value } = e.target;
@@ -29,24 +28,44 @@ const AddComponent = () => {
     }));
   };
 
-  const handleClickAdd = async (e) => {
-    e.preventDefault(); // 새로고침 방지
-    const files = uploadRef.current.files;
-    const formData = new FormData();
+  // 데이터 가져오기
+  useEffect(() => {
+    getOne(pno).then((data) => {
+      console.log(data);
+      setProduct(data);
+    });
+  }, [pno]);
 
-    // 이미지가 비어있으면 알림
-    if (!files || files.length === 0) {
-      alert("이미지를 업로드해주세요.");
+  // 수정버튼 클릭 시
+  const handleClickModify = async (e) => {
+    e.preventDefault();
+
+    const files = uploadRef.current.files;
+
+    // 기존 파일과 새로 추가한 파일 둘 다 없으면 경고
+    if (
+      (!product.uploadFileNames || product.uploadFileNames.length === 0) &&
+      (!files || files.length === 0)
+    ) {
+      alert(
+        "기존 이미지가 없고 새로 추가한 이미지도 없습니다. 이미지를 한 개 이상 업로드해야 합니다."
+      );
       return;
     }
-    for (let i = 0; i < files.length; i++) {
-      formData.append("files", files[i]);
+
+    const formData = new FormData();
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]);
+      }
     }
 
     const productDTO = {
+      pno: product.pno,
       brand: product.brand,
       pname: product.pname,
       pdesc: product.pdesc,
+      uploadFileNames: product.uploadFileNames,
       options: product.options,
     };
 
@@ -56,23 +75,32 @@ const AddComponent = () => {
     );
 
     try {
-      await postAdd(formData);
-      alert("등록 성공!");
+      putModify(pno, formData);
+      alert("수정 성공!");
       moveToAdminList();
     } catch (err) {
-      console.error("등록 실패", err);
-      alert("등록 실패. 다시 시도해주세요.");
+      console.error(err);
+      alert("수정 실패. 다시 시도해주세요.");
     }
   };
-
+  // 이전 이미지 삭제버튼
+  const deleteOldImages = (imageName) => {
+    const resultFileNames = product.uploadFileNames.filter(
+      (fileName) => fileName !== imageName
+    );
+    setProduct((prev) => ({
+      ...prev,
+      uploadFileNames: resultFileNames,
+    }));
+  };
   return (
     <section className="py-5">
       <div className="container px-4 px-lg-5 ">
         <div className="text-center mb-5">
-          <h1 className=" mb-5">상품 추가</h1>
+          <h1 className=" mb-5">상품 관리</h1>
           <hr />
         </div>
-        <form onSubmit={handleClickAdd} className="d-flex flex-column gap-4">
+        <form onSubmit={handleClickModify} className="d-flex flex-column gap-4">
           {/* 브랜드명 + 상품명 입력 */}
           <div className="row mb-3 align-items-center text-center">
             <label className="col-sm-3 col-form-label fs-5">
@@ -122,20 +150,23 @@ const AddComponent = () => {
             {product.options.map((opt, idx) => (
               <div
                 key={idx}
-                className="d-flex align-items-center justify-content-center text-center g-4"
+                className="d-flex align-items-center justify-content-center text-center mb-3"
               >
                 {/* 옵션 번호 */}
                 <label className="col-sm-3 col-form-label fs-5">
                   옵션{idx + 1}
                 </label>
-                <div className="d-flex w-100 gap-1 justify-content-around align-content-center">
+                <div
+                  className="d-flex w-100 gap-1 justify-content-around align-content-center border p-2"
+                  style={{ borderRadius: "10px" }}
+                >
                   {/* 용량 */}
                   <div className="d-flex align-items-center flex-grow-1">
                     <label className="text-muted w-50">용량(ml)</label>
                     <input
                       type="number"
                       className="form-control"
-                      value={opt.perfumeVol}
+                      value={opt.perfumeVol === 0 ? "" : opt.perfumeVol}
                       required
                       onChange={(e) => {
                         const newOptions = [...product.options];
@@ -151,7 +182,7 @@ const AddComponent = () => {
                     <input
                       type="number"
                       className="form-control w-75"
-                      value={opt.price}
+                      value={opt.price === 0 ? "" : opt.price}
                       required
                       onChange={(e) => {
                         const newOptions = [...product.options];
@@ -167,7 +198,7 @@ const AddComponent = () => {
                     <input
                       type="number"
                       className="form-control"
-                      value={opt.stock}
+                      value={opt.stock === 0 ? "" : opt.stock}
                       required
                       onChange={(e) => {
                         const newOptions = [...product.options];
@@ -215,22 +246,58 @@ const AddComponent = () => {
             </div>
           </div>
           {/* 이미지 업로드 */}
-          <div className="row mb-4 text-center">
+
+          <div className="d-flex text-center">
             <label className="col-sm-3 col-form-label fs-5">상품 이미지</label>
-            <div className="col-sm-9">
-              <input
-                type="file"
-                className="form-control"
-                multiple
-                ref={uploadRef}
-              />
+            <div className="d-flex flex-column gap-3 w-100">
+              {product.uploadFileNames.map((imgFile, i) => (
+                <div
+                  key={i}
+                  className="d-flex w-100 gap-1 justify-content-around align-items-center border p-2"
+                  style={{ borderRadius: "10px" }}
+                >
+                  <div className="align-items-center flex-grow-1">
+                    <img
+                      alt="img"
+                      className="img-thumbnail"
+                      style={{
+                        width: "80px",
+                        height: "80px",
+                        objectFit: "cover",
+                      }}
+                      src={`${host}/api/product/view/s_${imgFile}`}
+                    />
+                  </div>
+                  <div className="flex-grow-3">
+                    <span className="text-muted">{imgFile}</span>
+                  </div>
+
+                  <div className=" text-center flex-grow-1">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger w-50"
+                      onClick={() => deleteOldImages(imgFile)}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="">
+                <input
+                  type="file"
+                  className="form-control"
+                  multiple
+                  ref={uploadRef}
+                />
+              </div>
             </div>
           </div>
 
           {/* 등록 버튼 */}
           <div className="text-center">
             <button type="submit" className="btn btn-dark px-4 py-2">
-              등록하기
+              수정하기
             </button>
           </div>
         </form>
@@ -238,5 +305,4 @@ const AddComponent = () => {
     </section>
   );
 };
-
-export default AddComponent;
+export default ModifyComponent;

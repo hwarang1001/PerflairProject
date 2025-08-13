@@ -6,6 +6,7 @@ const MainPage = lazy(() => import("../page/MainPage"));
 const ProductListPage = lazy(() => import("../page/product/ListPage"));
 const ProductReadPage = lazy(() => import("../page/product/ReadPage"));
 const ProductAddPage = lazy(() => import("../page/product/AddPage"));
+const ProductModyfyPage = lazy(() => import("../page/product/ModifyPage"));
 const ProductAdminListPage = lazy(() =>
   import("../page/product/AdminListPage")
 );
@@ -49,10 +50,18 @@ const root = createBrowserRouter([
     ),
   },
   {
-    path: `/product/`,
+    path: `/product/add`,
     element: (
       <Suspense fallback={<Loading />}>
         <ProductAddPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: `product/modify/:pno`,
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ProductModyfyPage />
       </Suspense>
     ),
   },
