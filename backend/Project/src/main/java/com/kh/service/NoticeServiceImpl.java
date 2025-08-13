@@ -33,20 +33,38 @@ public class NoticeServiceImpl implements NoticeService {
 
 	@Override
 	public PageResponseDTO<NoticeDTO> list(PageRequestDTO pageRequestDTO) {
-		log.info("getList ");
-		// 페이지 시작 번호가 0 부터 시작하므로
-		Pageable pageable = PageRequest.of(pageRequestDTO.getPage() - 1, pageRequestDTO.getSize(),
-				Sort.by("pno").descending());
-		Page<Notice> result = noticeRepository.findAllNotDeleted(pageable);
-		List<NoticeDTO> dtoList = result.get().map(notice -> {
-			NoticeDTO noticeDTO = NoticeDTO.builder().noticeId(notice.getNoticeId()).title(notice.getTitle())
-					.content(notice.getContent()).createdAt(notice.getCreatedAt()).updateAt(notice.getUpdateAt())
-					.build();
-			return noticeDTO;
-		}).collect(Collectors.toList());
-		long totalCount = result.getTotalElements();
-		return PageResponseDTO.<NoticeDTO>withAll().dtoList(dtoList).totalCount(totalCount)
-				.pageRequestDTO(pageRequestDTO).build();
+	    log.info("getList ");
+
+	    // 페이지 번호가 1 미만일 경우 1로 보정합니다.
+	    int page = pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1;
+
+	    // Pageable 객체 생성
+	    Pageable pageable = PageRequest.of(page, pageRequestDTO.getSize(),
+	            Sort.by("noticeId").descending());
+
+	    // 데이터 조회
+	    Page<Notice> result = noticeRepository.findAllNotDeleted(pageable);
+
+	    // Page<Notice>를 NoticeDTO 리스트로 변환
+	    // result.get() 대신 result.stream()을 사용해야 합니다.
+	    List<NoticeDTO> dtoList = result.stream().map(notice -> {
+	        NoticeDTO noticeDTO = NoticeDTO.builder()
+	            .noticeId(notice.getNoticeId())
+	            .title(notice.getTitle())
+	            .content(notice.getContent())
+	            .createdAt(notice.getCreatedAt())
+	            .updateAt(notice.getUpdateAt())
+	            .build();
+	        return noticeDTO;
+	    }).collect(Collectors.toList());
+
+	    long totalCount = result.getTotalElements();
+
+	    return PageResponseDTO.<NoticeDTO>withAll()
+	            .dtoList(dtoList)
+	            .totalCount(totalCount)
+	            .pageRequestDTO(pageRequestDTO)
+	            .build();
 	}
 
 	@Override
