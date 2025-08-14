@@ -16,3 +16,8 @@ export const loginPost = async (loginParam) => {
 
   return res.data;
 };
+
+export const registerPost = async (data) => {
+  const res = await axios.post(`${host}/signup`, data);
+  return res.data;
+};
