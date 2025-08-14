@@ -8,7 +8,7 @@ const ProductReadPage = lazy(() => import("../page/product/ReadPage"));
 const ProductAddPage = lazy(() => import("../page/product/AddPage"));
 const ProductModyfyPage = lazy(() => import("../page/product/ModifyPage"));
 const ProductAdminListPage = lazy(() =>
-  import("../page/product/AdminListPage")
+import("../page/product/AdminListPage")
 );
 
 // notice
@@ -18,10 +18,14 @@ const NoticeReadPage = lazy(() => import("../page/notice/ReadPage"));
 const QnaListPage = lazy(() => import("../page/qna/ListPage"));
 const QnaReadPage = lazy(() => import("../page/qna/ReadPage"));
 const QnaWritePage = lazy(() => import("../page/qna/WritePage"));
-
 // login
 const LoginPage = lazy(() => import("../page/LoginPage"));
 const RegisterPage = lazy(() => import("../page/RegisterPage"));
+// cart
+const CartPage = lazy(() => import("../page/cart/CartPage"));
+
+// payment
+const PaymentPage = lazy(() => import("../page/payment/PaymentPage.jsx"));
 
 const root = createBrowserRouter([
   {
@@ -132,5 +136,25 @@ const root = createBrowserRouter([
       </Suspense>
     ),
   },
+  // cart
+  {
+    path: "/cart",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <CartPage />
+      </Suspense>
+    ),
+  },
+  //payment
+  {
+    path: "/payment",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <PaymentPage />
+      </Suspense>
+    ),
+  },
+  
+  
 ]);
 export default root;
