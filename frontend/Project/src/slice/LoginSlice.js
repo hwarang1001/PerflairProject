@@ -30,6 +30,7 @@ const LoginSlice = createSlice({
     logout: (state, action) => {
       console.log("로그아웃");
       removeCookie("member");
+      return initState;
     },
   },
   extraReducers: (builder) => {
