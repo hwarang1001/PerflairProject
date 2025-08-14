@@ -1,6 +1,9 @@
 package com.kh.service;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+
+import com.kh.dto.PageRequestDTO;
+import com.kh.dto.PageResponseDTO;
 import com.kh.dto.QuestionDTO;
 
 public interface QuestionService {
@@ -15,4 +18,6 @@ public interface QuestionService {
 	
 	void delete(Long qid, String userId) throws NotFoundException;
 
+	public PageResponseDTO<QuestionDTO> list(PageRequestDTO pageRequestDTO);
+	
 }

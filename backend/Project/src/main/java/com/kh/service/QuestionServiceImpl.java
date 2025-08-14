@@ -1,8 +1,14 @@
 package com.kh.service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,20 +17,24 @@ import com.kh.controller.error.ForbiddenException;
 import com.kh.domain.Member;
 import com.kh.domain.Question;
 import com.kh.domain.QuestionStatus;
+import com.kh.dto.PageRequestDTO;
+import com.kh.dto.PageResponseDTO;
 import com.kh.dto.QuestionDTO;
 import com.kh.repository.MemberRepository;
 import com.kh.repository.QuestionRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 /**
- * 질문 관련 비즈니스 로직을 처리하는 서비스 클래스.
- * Spring의 @Service 어노테이션과 Lombok의 @RequiredArgsConstructor를 사용합니다.
- * 모든 메소드는 @Transactional 어노테이션으로 트랜잭션 관리를 합니다.
+ * 질문 관련 비즈니스 로직을 처리하는 서비스 클래스. Spring의 @Service 어노테이션과
+ * Lombok의 @RequiredArgsConstructor를 사용합니다. 모든 메소드는 @Transactional 어노테이션으로 트랜잭션
+ * 관리를 합니다.
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Log4j2
 public class QuestionServiceImpl implements QuestionService {
 
 	private final QuestionRepository questionRepo;
@@ -36,6 +46,43 @@ public class QuestionServiceImpl implements QuestionService {
 	 * @param dto 질문의 제목과 내용을 담고 있는 DTO
 	 * @return 생성된 질문의 ID
 	 */
+	
+	@Override
+	public PageResponseDTO<QuestionDTO> list(PageRequestDTO pageRequestDTO) {
+	    log.info("getList ");
+
+	    // 페이지 번호가 1 미만일 경우 1로 보정합니다.
+	    int page = pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1;
+
+	    // Pageable 객체 생성
+	    Pageable pageable = PageRequest.of(page, pageRequestDTO.getSize(),
+	            Sort.by("questionId").descending());
+	    
+	    // 데이터 조회
+	    Page<Question> result = questionRepo.findAllNotDeleted(QuestionStatus.DELETED, pageable);
+
+	    // Page<Notice>를 NoticeDTO 리스트로 변환
+	    // result.get() 대신 result.stream()을 사용해야 합니다.
+	    List<QuestionDTO> dtoList = result.stream().map(question -> {
+	        QuestionDTO questionDTO = QuestionDTO.builder()
+	            .questionId(question.getQuestionId())
+	            .userId(question.getUserId().getUserId())
+	            .title(question.getTitle()) 
+	            .content(question.getContent())
+	            .createdAt(question.getCreatedAt())
+	            .status(question.getStatus()).build();
+	        return questionDTO;
+	    }).collect(Collectors.toList());
+
+	    long totalCount = result.getTotalElements();
+
+	    return PageResponseDTO.<QuestionDTO>withAll()
+	            .dtoList(dtoList)
+	            .totalCount(totalCount)
+	            .pageRequestDTO(pageRequestDTO)
+	            .build();
+	}
+
 	@Override
 	public Long create(String userId, QuestionDTO dto) {
 		Member member = memberRepo.getReferenceById(userId);
@@ -49,7 +96,7 @@ public class QuestionServiceImpl implements QuestionService {
 
 	@Override
 	public QuestionDTO read(Long qid) {
-		Optional<Question> result = questionRepo.findById(qid);
+		Optional<Question> result = questionRepo.findByQuestionIdAndStatusNot(qid, QuestionStatus.DELETED);
 
 		if (result.isPresent()) {
 			Question question = result.get();
@@ -61,15 +108,14 @@ public class QuestionServiceImpl implements QuestionService {
 	}
 
 	/**
-	 * 업데이트: 질문의 제목과 내용을 수정합니다.
-	 * 본인의 글만, 그리고 상태가 WAITING일 때만 수정 가능합니다.
+	 * 업데이트: 질문의 제목과 내용을 수정합니다. 본인의 글만, 그리고 상태가 WAITING일 때만 수정 가능합니다.
 	 *
-	 * @param qid 업데이트할 질문의 ID
+	 * @param qid    업데이트할 질문의 ID
 	 * @param userId 수정 요청을 한 사용자의 ID
-	 * @param dto 업데이트할 데이터가 담긴 DTO
-	 * @throws NotFoundException 질문이 존재하지 않을 경우
+	 * @param dto    업데이트할 데이터가 담긴 DTO
+	 * @throws NotFoundException  질문이 존재하지 않을 경우
 	 * @throws ForbiddenException 사용자 ID가 일치하지 않을 경우
-	 * @throws ConflictException 질문 상태가 WAITING이 아닐 경우
+	 * @throws ConflictException  질문 상태가 WAITING이 아닐 경우
 	 */
 	@Override
 	public void update(Long qid, String userId, QuestionDTO dto) throws NotFoundException {
@@ -89,11 +135,11 @@ public class QuestionServiceImpl implements QuestionService {
 	}
 
 	/**
-	 * 삭제: 질문의 상태를 DELETED로 변경합니다.
-	 * 본인의 글만 삭제 가능합니다.
-	 * @param qid 삭제할 질문의 ID
+	 * 삭제: 질문의 상태를 DELETED로 변경합니다. 본인의 글만 삭제 가능합니다.
+	 * 
+	 * @param qid    삭제할 질문의 ID
 	 * @param userId 삭제 요청을 한 사용자의 ID
-	 * @throws NotFoundException 질문이 존재하지 않을 경우
+	 * @throws NotFoundException  질문이 존재하지 않을 경우
 	 * @throws ForbiddenException 사용자 ID가 일치하지 않을 경우
 	 */
 	@Override
