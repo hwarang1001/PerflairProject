@@ -1,0 +1,178 @@
+/* ===== MyPageComponent.css (revised) ===================================== */
+/* Design tokens */
+:root {
+  --header-h: 88px;
+
+  /* brand & neutrals */
+  --brand: #1e7b55;
+  --ink-900: #222;
+  --ink-700: #3a3a3a;
+  --ink-500: #6b7280;
+  --line: #e9edf2;
+  --soft: #f5f7f9;
+  --surface: #fff;
+
+  /* radii & shadows */
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-0: 0 1px 0 rgba(0, 0, 0, 0.02);
+
+  /* spacing (taller look) */
+  --my-row-py: 28px; /* 각 행 높이 */
+  --my-sep-space: 18px; /* 구분선 위/아래 여백 */
+  --my-panel-py: 22px; /* 펼침 패널 내부 패딩 */
+}
+
+@media (max-width: 991px) {
+  :root {
+    --header-h: 72px;
+  }
+  /* 모바일에서는 과한 세로 길이를 살짝 줄임 */
+  :root {
+    --my-row-py: 22px;
+    --my-sep-space: 12px;
+    --my-panel-py: 18px;
+  }
+}
+
+/* ===== Base surface ===== */
+.mypage-surface,
+.myhub-surface {
+  background: #fff; /* 미니멀 */
+}
+
+.page-tall {
+  min-height: calc(100svh - var(--header-h));
+}
+
+/* 상단 타이틀 */
+.myhub-title {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-900);
+  margin-top: 8px;
+}
+
+/* 래퍼 카드: 리스트 느낌으로 심플하게 */
+.myhub-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0 6px;
+}
+
+/* ===== Row (label + button) ============================================== */
+.myhub-row {
+  padding: var(--my-row-py) 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.myhub-left {
+  padding-left: 10px;
+}
+.myhub-right {
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.myhub-label {
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: 0.01em;
+}
+.myhub-sub {
+  font-size: 13.5px;
+  color: var(--ink-500);
+  margin-top: 4px;
+}
+
+/* 얇은 구분선 */
+.myhub-sep {
+  margin: var(--my-sep-space) 0;
+  border: 0;
+  height: 0;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+/* ===== Panels (아코디언 본문) ============================================ */
+.myhub-panel {
+  padding: var(--my-panel-py) 20px;
+  background: #fcfcfd;
+  border-top: 1px dashed #eef1f4;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  margin: 6px 0 calc(var(--my-sep-space) - 4px);
+}
+
+/* 폼 컨트롤 사이즈 업 */
+.controls-xl .form-label {
+  font-weight: 600;
+  color: var(--ink-700);
+}
+.controls-xl .form-control {
+  border-color: #e5e7eb;
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+}
+.controls-xl .btn {
+  padding: 0.6rem 0.9rem;
+}
+
+/* ===== Status bar (주문현황) ============================================= */
+.myhub-statusbar {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 10px 8px 24px;
+}
+.myhub-chip {
+  background: transparent;
+  border: 0;
+  padding: 8px 4px;
+  text-align: center;
+}
+.myhub-chip-label {
+  font-size: 12px;
+  color: #667085;
+}
+.myhub-chip-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-top: 2px;
+}
+
+@media (max-width: 576px) {
+  .myhub-statusbar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== Buttons (작은 아웃라인) =========================================== */
+.btn.btn-outline-dark.btn-sm {
+  border-color: #d9dde1;
+  color: #2f2f2f;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.35rem 0.6rem;
+  box-shadow: var(--shadow-0);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn.btn-outline-dark.btn-sm:hover {
+  border-color: #bfc6cd;
+  color: #111;
+  background: #f8fafb;
+}
+
+.myhub-row:hover {
+  background: #fafafa;
+}
