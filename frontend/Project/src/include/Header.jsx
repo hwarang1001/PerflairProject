@@ -1,3 +1,4 @@
+// src/components/layout/Header.jsx
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../App.css";
 import { useSelector } from "react-redux";
@@ -27,8 +28,8 @@ const Header = () => {
           <div className="d-flex ms-auto">
             {/* 우측 상단 메뉴 */}
             <div className="d-flex gap-3 small">
-              <a href="/support" className="text-dark text-decoration-none">
-                고객센터
+              <a href="/member/mypage" className="text-dark text-decoration-none">
+                마이페이지
               </a>
               <a href="/cart" className="text-dark text-decoration-none">
                 장바구니

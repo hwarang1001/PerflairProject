@@ -1,4 +1,15 @@
-.container-sm {
+/* 본문 고정 높이 변수 (반응형) */
+:root {
+  --qna-content-h: 260px; /* 데스크톱 기준 고정 높이 */
+}
+@media (max-width: 576px) {
+  :root {
+    --qna-content-h: 200px; /* 모바일에서 살짝 줄임 */
+  }
+}
+
+/* 컨테이너 스타일 */
+.qna-container {
   position: relative;
   background-color: white;
   border-radius: 12px;
@@ -6,19 +17,19 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
   font-family: "SUIT", "Pretendard", "Noto Sans KR", sans-serif;
   margin-bottom: 3rem;
-  min-height: 600px;
+  min-height: 640px; /* 본문 슬롯+답변 박스+버튼 공간 확보 */
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.container-sm > h2 {
+.qna-container > h2 {
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
 /* 작성일 */
-.notice-date {
+.qna-date {
   font-weight: 400;
   font-size: 1rem;
   color: #888;
@@ -29,67 +40,33 @@
   padding-bottom: 0.75rem;
 }
 
-/* 본문 내용 */
-.notice-content {
+/* 본문을 담는 고정 슬롯 (높이 고정 + 스크롤) */
+.qna-content-slot {
+  min-height: var(--qna-content-h);
+  max-height: var(--qna-content-h);
+  overflow-y: auto;
+  padding-right: 4px; /* 스크롤 여백 */
+  margin-bottom: 2rem; /* 아래 답변 박스와 간격 */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 내용 */
+.qna-content {
   font-weight: 400;
   font-size: 1.125rem;
   line-height: 1.8;
   color: #333;
-  white-space: pre-line;
+  /* 긴 텍스트/단어도 안전하게 줄바꿈 */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* 답변 섹션 */
-.qna-answer-section {
-  position: absolute;
-  bottom: 80px;
-  left: 28px;
-  right: 28px;
-  padding: 1.5rem;
-  background-color: #f9f7f4;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
+/* 버튼 그룹 정렬 — ✅ 절대배치 제거, 정상 흐름으로 배치 */
+.qna-button-row {
+  position: static;
+  margin-top: 28px;
 
-.qna-answer-section h5 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #2e7d32;
-  margin-bottom: 1.125rem;
-}
-
-.qna-answer-section p {
-  font-size: 1rem;
-  color: #444;
-  margin-bottom: 0.5rem;
-}
-
-.qna-answer-section .qna-answer-meta {
-  font-size: 0.875rem;
-  color: #777;
-  text-align: right;
-}
-
-/* 답변이 없을 때 */
-.qna-answer-empty {
-  position: absolute;
-  bottom: 80px;
-  left: 28px;
-  right: 28px;
-  background-color: #fdf6f6;
-  padding: 1.5rem;
-  border-radius: 10px;
-  text-align: center;
-  color: #c62828;
-  font-weight: 500;
-  border: 1px dashed #e0b4b4;
-}
-
-/* 버튼 영역 정렬 */
-.notice-button-row {
-  position: absolute;
-  bottom: 20px;
-  left: 28px;
-  right: 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -97,19 +74,20 @@
   gap: 12px;
 }
 
-/* 버튼 그룹 */
+/* 오른쪽 수정/삭제 버튼 그룹 */
 .button-group-right {
   display: flex;
   gap: 20px;
 }
 
+/* 왼쪽 목록 버튼 */
 .button-back-left {
   display: flex;
   justify-content: flex-end;
 }
 
 /* 공통 버튼 스타일 */
-.notice-button-row button {
+.qna-button-row button {
   min-width: 120px;
   padding: 10px 16px;
   border-radius: 10px;
@@ -124,7 +102,6 @@
   color: #555;
   border-color: #ccc;
 }
-
 .btn-outline-secondary:hover {
   color: #222;
   background-color: #f2f2f2;
@@ -136,21 +113,123 @@
   color: #e74c3c;
   border-color: #e74c3c;
 }
-
 .btn-outline-danger:hover {
   background-color: #e74c3c;
   color: white;
   border-color: #e74c3c;
 }
 
-/* 목록으로 돌아가기 버튼 */
+/* 목록 버튼 */
 .btn-secondary {
   background-color: #a67c52;
   border: none;
   color: white;
 }
-
 .btn-secondary:hover {
   background-color: #8c643f;
   color: #fff;
+}
+
+/* 답변 영역 박스 */
+.qna-answer-box {
+  margin-top: 2rem;
+  margin-bottom: 28px;
+  padding: 1.5rem;
+  background-color: #f9f7f4;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.qna-answer-box h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: 1.125rem;
+}
+.qna-answer-box p {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+  /* 긴 답변 줄바꿈 안전장치 */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* 답변 메타 + 수정 버튼 한 줄 정렬 */
+.qna-answer-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.qna-answer-meta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280; /* 살짝 연한 톤 */
+}
+
+/* 답변 없을 때 */
+.qna-answer-empty {
+  margin-top: 2rem;
+  /* ✅ 아래 버튼과 간격 확보 */
+  margin-bottom: 28px;
+
+  padding: 1.5rem;
+  background-color: #fff4f4; /* 약간 연한 핑크 */
+  border-radius: 10px;
+  text-align: center;
+  color: #b33a3a; /* 진한 버건디 느낌 */
+  font-weight: 500;
+  border: 1px dashed #d7a2a2; /* 연한 테라코타 */
+}
+.qna-answer-empty:hover {
+  background-color: #f5f1d6; /* 연한 카키-베이지 */
+  color: #7a6f3f; /* 톤 다운된 올리브 그린 */
+  border-color: #7a6f3f;
+  box-shadow: 0 0 10px rgba(122, 111, 63, 0.4);
+  cursor: pointer;
+}
+
+/* 답변 작성/수정 폼 */
+.qna-answer-form textarea.form-control {
+  border-radius: 10px;
+  resize: vertical;
+  font-size: 1rem;
+  margin-top: 30px;
+  /* 긴 입력도 줄바꿈 */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.qna-answer-form button.btn-mz-style {
+  background-color: #a67c52;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(166, 124, 82, 0.4);
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+.qna-answer-form button.btn-mz-style:hover {
+  background-color: #8c643f;
+}
+
+/* 모바일에서 자연스럽게 줄바꿈 */
+@media (max-width: 576px) {
+  .qna-answer-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .qna-answer-meta-row .btn {
+    align-self: flex-end;
+    margin-top: 6px;
+  }
+}
+
+/* 기존 .qna-answer-meta-row 규칙은 그대로 두고, swap 클래스가 붙으면 좌우 순서만 반전 */
+.qna-answer-meta-row.swap {
+  flex-direction: row-reverse;
 }

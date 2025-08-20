@@ -8,24 +8,28 @@ const ProductReadPage = lazy(() => import("../page/product/ReadPage"));
 const ProductAddPage = lazy(() => import("../page/product/AddPage"));
 const ProductModyfyPage = lazy(() => import("../page/product/ModifyPage"));
 const ProductAdminListPage = lazy(() =>
-import("../page/product/AdminListPage")
+  import("../page/product/AdminListPage")
 );
 
 // notice
 const NoticeListPage = lazy(() => import("../page/notice/ListPage"));
 const NoticeReadPage = lazy(() => import("../page/notice/ReadPage"));
+const NoticeWritePage = lazy(() => import("../page/notice/WritePage"));
 // qna
 const QnaListPage = lazy(() => import("../page/qna/ListPage"));
 const QnaReadPage = lazy(() => import("../page/qna/ReadPage"));
 const QnaWritePage = lazy(() => import("../page/qna/WritePage"));
 // login
-const LoginPage = lazy(() => import("../page/LoginPage"));
-const RegisterPage = lazy(() => import("../page/RegisterPage"));
+const LoginPage = lazy(() => import("../page/login/LoginPage"));
+const RegisterPage = lazy(() => import("../page/login/RegisterPage"));
 // cart
 const CartPage = lazy(() => import("../page/cart/CartPage"));
 
 // payment
 const PaymentPage = lazy(() => import("../page/payment/PaymentPage.jsx"));
+
+// member (마이페이지)
+const MyPage = lazy(() => import("../page/member/MyPage"));
 
 const root = createBrowserRouter([
   {
@@ -62,7 +66,7 @@ const root = createBrowserRouter([
     ),
   },
   {
-    path: `product/modify/:pno`,
+    path: `/product/modify/:pno`,
     element: (
       <Suspense fallback={<Loading />}>
         <ProductModyfyPage />
@@ -94,6 +98,22 @@ const root = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "/notice/write",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <NoticeWritePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/notice/edit/:id",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <NoticeWritePage />
+      </Suspense>
+    ),
+  },
   // qna
   {
     path: "/qna",
@@ -113,6 +133,14 @@ const root = createBrowserRouter([
   },
   {
     path: "/qna/write",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <QnaWritePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/qna/edit/:id",
     element: (
       <Suspense fallback={<Loading />}>
         <QnaWritePage />
@@ -154,7 +182,14 @@ const root = createBrowserRouter([
       </Suspense>
     ),
   },
-  
-  
+  // member(마이페이지)
+  {
+    path: "/member/mypage",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <MyPage />
+      </Suspense>
+    ),
+  },
 ]);
 export default root;
