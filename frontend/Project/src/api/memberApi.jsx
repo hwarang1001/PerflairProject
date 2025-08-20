@@ -2,22 +2,39 @@ import axios from "axios";
 import { API_SERVER_HOST } from "./productApi";
 import jwtAxios from "../util/jwtUtil";
 
-const host = `${API_SERVER_HOST}/api/member`;
+const prefix = `${API_SERVER_HOST}/api/member`;
 
-export const loginPost = async (loginParam) => {
-  // Content-Type을 x-www-form-urlencoded로 지정하여, 폼 데이터를 보내겠다는 의미이다.
-  //axios는 json 데이터를 보내는데 기본방식인데 , form 데이터를 보낼때는 content-type 을 지정해야 한다.
-  const header = { headers: { "Content-Type": "x-www-form-urlencoded" } };
-  const form = new FormData();
-  form.append("username", loginParam.userId);
-  form.append("password", loginParam.pw);
+// 로그인 (public) — x-www-form-urlencoded
+export const loginPost = async ({ userId, pw }) => {
+  const body = new URLSearchParams();
+  body.append("username", userId);
+  body.append("password", pw);
+  const res = await axios.post(`${prefix}/login`, body);
+  return res.data; // { accessToken, refreshToken, ... } 가정
+};
 
-  const res = await axios.post(`${host}/login`, form, header);
+// 마이페이지: 내 정보 조회 (로그인 필요)
+export const getMyProfile = async () => {
+  const res = await jwtAxios.get(`${prefix}/me`);
+  return res.data;
+};
 
+// 마이페이지: 내 정보 수정 (로그인 필요)
+export const updateMyProfile = async (profileData) => {
+  const res = await jwtAxios.put(`${prefix}/me`, profileData);
+  return res.data;
+};
+
+// 마이페이지: 비밀번호 변경 (로그인 필요)
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  const res = await jwtAxios.put(`${prefix}/me/password`, {
+    currentPassword,
+    newPassword,
+  });
   return res.data;
 };
 
 export const registerPost = async (data) => {
-  const res = await axios.post(`${host}/signup`, data);
+  const res = await axios.post(`${prefix}/signup`, data);
   return res.data;
 };

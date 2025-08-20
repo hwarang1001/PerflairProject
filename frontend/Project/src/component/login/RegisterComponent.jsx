@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 import "./RegisterComponent.css";
-import { registerPost } from "../../api/MemberApi";
+import { registerPost } from "../../api/memberApi";
 import useCustomLogin from "../../hook/useCustomLogin";
 const initialForm = {
   userId: "",
@@ -80,7 +80,7 @@ const RegisterComponent = () => {
       phoneNum: fullPhoneNum,
       address: fullAddress,
     };
-
+    console.log(dataToSend);
     try {
       setError("");
       await registerPost(dataToSend);
