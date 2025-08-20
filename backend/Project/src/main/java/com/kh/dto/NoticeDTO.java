@@ -1,7 +1,7 @@
 package com.kh.dto;
 
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,8 +17,8 @@ public class NoticeDTO {
 	private Long noticeId;
     private String title;
     private String content;
-    private LocalDateTime createdAt;
-    private LocalDateTime updateAt;
+    private LocalDate createdAt;
+    private LocalDate updateAt;
     private boolean delFlag;
     
 }
