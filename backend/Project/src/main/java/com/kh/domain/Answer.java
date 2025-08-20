@@ -51,7 +51,7 @@ public class Answer {
     @Column(name = "UPDATED_AT", nullable = false)
     private LocalDate  updatedAt;
 
-
+    
 
     @PrePersist
     void prePersist() {

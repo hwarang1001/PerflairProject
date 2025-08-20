@@ -2,12 +2,12 @@ package com.kh.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,19 +43,21 @@ public class Member {
 		memberRoleList.clear();
 	}
 
-	public void changePw(String pw) {
-		this.pw = pw;
-	}
-
-	public void changeSocial(boolean social) {
-		this.social = social;
-	}
-
 	public void changeAddress(String address) {
 		this.address = address;
+	}
+
+	public void changePw(String pw) {
+		this.pw = pw;
 	}
 
 	public void changePhoneNum(String phoneNum) {
 		this.phoneNum = phoneNum;
 	}
+
+	// 💡 memberRoleList에서 역할 이름(String)만 추출하는 메서드 추가
+	public List<String> getRoleNames() {
+		return memberRoleList.stream().map(MemberRole::name).collect(Collectors.toList());
+	}
+
 }

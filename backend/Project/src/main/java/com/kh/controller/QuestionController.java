@@ -1,8 +1,6 @@
 package com.kh.controller;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
@@ -18,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.common.CurrentUser;
-import com.kh.dto.AnswerDTO;
 import com.kh.dto.MemberDTO;
+import com.kh.dto.NoticeDTO;
 import com.kh.dto.PageRequestDTO;
 import com.kh.dto.PageResponseDTO;
 import com.kh.dto.QuestionDTO;
-import com.kh.repository.AnswerRepository;
+import com.kh.dto.ReviewDTO;
 import com.kh.service.QuestionService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,30 +35,26 @@ import lombok.extern.log4j.Log4j2;
 public class QuestionController {
 	private final QuestionService service;
 	private final CurrentUser cur;
-	private final AnswerRepository answerRepo;
 
 	/** 작성 */
 	@PostMapping("/")
 	public ResponseEntity<?> create(@RequestBody QuestionDTO questionDTO,
 			@AuthenticationPrincipal MemberDTO memberDTO) {
-		String userId = memberDTO.getUserId();
-		log.info(userId);
 		questionDTO.setUserId(memberDTO.getUserId());
 		Long id = service.create(cur.id(), questionDTO);
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", id));
 	}
-
+	
 	@GetMapping("/{id}")
-	public ResponseEntity<QuestionDTO> read(@PathVariable Long id) {
-		return ResponseEntity.ok(service.read(id));
+	public QuestionDTO get(@PathVariable Long id) {
+	    return service.read(id);
 	}
-
 	@GetMapping("/list")
 	public PageResponseDTO<QuestionDTO> list(PageRequestDTO pageRequestDTO) {
 		log.info("list............." + pageRequestDTO);
 		return service.list(pageRequestDTO);
 	}
-
+	
 	/**
 	 * 수정
 	 * 
@@ -70,7 +64,7 @@ public class QuestionController {
 	public void update(@PathVariable Long id, @RequestBody QuestionDTO questionDTO) throws NotFoundException {
 		service.update(id, cur.id(), questionDTO);
 	}
-
+	
 	/**
 	 * 삭제(소프트 딜리트)
 	 * 

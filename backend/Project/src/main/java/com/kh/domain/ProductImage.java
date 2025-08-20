@@ -8,16 +8,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-@Embeddable 
-@Getter 
-@ToString 
-@Builder 
-@AllArgsConstructor 
-@NoArgsConstructor 
+@Embeddable
+@Getter
+@ToString
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductImage {
 
-	  @Column(name = "file_name")
-	    private String fileName;
+	@Column(name = "file_name")
+	private String fileName;
 	private int ord;
 
 	public void setOrd(int ord) {

@@ -1,6 +1,5 @@
 import axios from "axios";
 import { API_SERVER_HOST } from "./productApi";
-import jwtAxios from "../util/jwtUtil";
 
 const prefix = `${API_SERVER_HOST}/api/member`;
 

@@ -50,7 +50,6 @@ public class ReviewController {
 
 		Long reviewId = service.register(reviewDTO);
 		return Map.of("result", reviewId);
-
 	}
 
 	@GetMapping("/view/{fileName}")
@@ -64,10 +63,10 @@ public class ReviewController {
 	}
 
 	@GetMapping("/list")
-	public PageResponseDTO<ReviewDTO> list(PageRequestDTO pageRequestDTO) {
-		log.info("list............." + pageRequestDTO);
+	public List<ReviewDTO> list(@RequestParam("pno") Long productId) {
+	    log.info("list............. productId={}", productId);
 
-		return service.list(pageRequestDTO);
+	    return service.listByProduct(productId);
 	}
 
 	@DeleteMapping("/{reviewId}")
