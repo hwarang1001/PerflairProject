@@ -1,5 +1,5 @@
 /* 공통 배경 및 폼 컨테이너 */
-.qna-form-wrapper {
+.notice-form-wrapper {
   background-color: white;
   border-radius: 12px;
   padding: 48px 28px;
@@ -12,20 +12,20 @@
 }
 
 /* 제목 스타일 */
-.qna-form-title {
+.notice-form-title {
   text-align: center;
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
 }
 
-.qna-form-divider {
+.notice-form-divider {
   border-color: rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
 /* 버튼 행 정렬 */
-.qna-btn-row {
+.notice-btn-row {
   display: flex;
   justify-content: space-between;
   align-items: center;

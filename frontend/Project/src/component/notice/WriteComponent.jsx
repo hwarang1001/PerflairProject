@@ -1,8 +1,6 @@
-// src/components/qna/WriteComponent.jsx
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getQna, postQna, modifyQna } from "../../api/qnaApi"; // Q&A API 불러오기
+import { getNotice, postNotice, modifyNotice } from "../../api/noticeApi"; // 실제 API 호출 함수
 import "./WriteComponent.css";
 
 const WriteComponent = () => {
@@ -14,24 +12,21 @@ const WriteComponent = () => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Q&A 수정 시 기존 데이터 불러오기
   useEffect(() => {
     if (isEdit) {
       setLoading(true);
       (async () => {
         try {
-          const qna = await getQna(id);
-          if (qna) {
-            setTitle(qna.title);
-            setContent(qna.content);
+          const notice = await getNotice(id);
+          if (notice) {
+            setTitle(notice.title);
+            setContent(notice.content);
           } else {
-            alert("해당 질문을 찾을 수 없습니다.");
-            navigate("/qna");
+            alert("해당 공지사항을 찾을 수 없습니다.");
+            navigate("/notice");
           }
         } catch (error) {
-          console.error("Q&A 불러오기 실패:", error);
-          alert("질문을 불러오는 중 오류가 발생했습니다.");
-          navigate("/qna");
+          console.error("공지사항 불러오기 실패:", error);
         } finally {
           setLoading(false);
         }
@@ -39,7 +34,6 @@ const WriteComponent = () => {
     }
   }, [id, isEdit, navigate]);
 
-  // 작성 or 수정 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -50,15 +44,15 @@ const WriteComponent = () => {
 
     try {
       if (isEdit) {
-        await modifyQna(id, { title, content });
-        alert("질문이 수정되었습니다.");
+        await modifyNotice(id, { title, content });
+        alert("공지사항이 수정되었습니다.");
       } else {
-        await postQna({ title, content });
-        alert("질문이 등록되었습니다.");
+        await postNotice({ title, content });
+        alert("공지사항이 등록되었습니다.");
       }
-      navigate("/qna");
+      navigate("/notice");
     } catch (error) {
-      alert("저장 중 오류가 발생했습니다.");
+      alert("오류가 발생했습니다.");
       console.error(error);
     }
   };
@@ -66,14 +60,15 @@ const WriteComponent = () => {
   return (
     <section className="py-5">
       <div className="container px-4 px-lg-5">
+        {/* ✅ 헤더 부분 통일 */}
         <div className="mb-5">
           <h1 className="text-center mb-5">
-            {isEdit ? "Q&A 수정" : "Q&A 작성"}
+            {isEdit ? "공지사항 수정" : "공지사항 작성"}
           </h1>
           <hr />
         </div>
 
-        <div className="qna-form-wrapper">
+        <div className="notice-form-wrapper">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="title" className="form-label">
@@ -85,8 +80,7 @@ const WriteComponent = () => {
                 className="form-control"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="질문 제목을 입력하세요"
-                disabled={loading}
+                placeholder="공지 제목을 입력하세요"
               />
             </div>
 
@@ -100,25 +94,19 @@ const WriteComponent = () => {
                 rows="10"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="질문 내용을 입력하세요"
-                disabled={loading}
+                placeholder="공지 내용을 입력하세요"
               />
             </div>
 
-            <div className="qna-btn-row">
+            <div className="notice-btn-row">
               <button
                 type="button"
                 className="btn btn-mz-outline"
-                onClick={() => navigate("/qna")}
-                disabled={loading}
+                onClick={() => navigate("/notice")}
               >
                 목록으로 돌아가기
               </button>
-              <button
-                type="submit"
-                className="btn btn-mz-style"
-                disabled={loading}
-              >
+              <button type="submit" className="btn btn-mz-style">
                 {isEdit ? "수정 완료" : "작성 완료"}
               </button>
             </div>

@@ -27,9 +27,27 @@ const beforeReq = (config) => {
       },
     });
   }
-  const memberObj =
-    typeof memberInfo === "string" ? JSON.parse(memberInfoStr) : memberInfoStr;
+
+  // memberInfoStr 변수를 직접 파싱
+  let memberObj;
+  try {
+    if (typeof memberInfoStr === "string") {
+      memberObj = JSON.parse(memberInfoStr);
+    } else {
+      memberObj = memberInfoStr; // 이미 객체면 그대로
+    }
+  } catch (e) {
+    console.error("Failed to parse member cookie:", e);
+    return Promise.reject({
+      response: {
+        data: { error: "INVALID_MEMBER_COOKIE" },
+      },
+    });
+  }
+
+  // 파싱된 객체에서 accessToken을 가져와 헤더에 설정
   config.headers.Authorization = `Bearer ${memberObj.accessToken}`;
+
   return config;
 };
 
