@@ -9,7 +9,12 @@ import com.kh.domain.Answer;
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
 	// 단건: 미삭제만
-    Optional<Answer> findByAnswerId(Long answerId);
+	
+	
+	
+	
+	Optional<Answer> findByAnswerId(Long answerId);
 
+	Optional<Answer> findByQuestionId_QuestionId(Long questionId);
 
 }

@@ -14,12 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.controller.error.ConflictException;
 import com.kh.controller.error.ForbiddenException;
+import com.kh.domain.Answer;
 import com.kh.domain.Member;
 import com.kh.domain.Question;
 import com.kh.domain.QuestionStatus;
+import com.kh.dto.AnswerDTO;
 import com.kh.dto.PageRequestDTO;
 import com.kh.dto.PageResponseDTO;
 import com.kh.dto.QuestionDTO;
+import com.kh.repository.AnswerRepository;
 import com.kh.repository.MemberRepository;
 import com.kh.repository.QuestionRepository;
 
@@ -39,48 +42,42 @@ public class QuestionServiceImpl implements QuestionService {
 
 	private final QuestionRepository questionRepo;
 	private final MemberRepository memberRepo;
+	private final AnswerRepository answerRepo;
 
 	/**
 	 * 작성: 새로운 질문을 생성하고 저장합니다.
+	 * 
 	 * @param userId 질문을 작성하는 사용자의 ID
-	 * @param dto 질문의 제목과 내용을 담고 있는 DTO
+	 * @param dto    질문의 제목과 내용을 담고 있는 DTO
 	 * @return 생성된 질문의 ID
 	 */
-	
+
 	@Override
 	public PageResponseDTO<QuestionDTO> list(PageRequestDTO pageRequestDTO) {
-	    log.info("getList ");
+		log.info("getList ");
 
-	    // 페이지 번호가 1 미만일 경우 1로 보정합니다.
-	    int page = pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1;
+		// 페이지 번호가 1 미만일 경우 1로 보정합니다.
+		int page = pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1;
 
-	    // Pageable 객체 생성
-	    Pageable pageable = PageRequest.of(page, pageRequestDTO.getSize(),
-	            Sort.by("questionId").descending());
-	    
-	    // 데이터 조회
-	    Page<Question> result = questionRepo.findAllNotDeleted(QuestionStatus.DELETED, pageable);
+		// Pageable 객체 생성
+		Pageable pageable = PageRequest.of(page, pageRequestDTO.getSize(), Sort.by("questionId").descending());
 
-	    // Page<Notice>를 NoticeDTO 리스트로 변환
-	    // result.get() 대신 result.stream()을 사용해야 합니다.
-	    List<QuestionDTO> dtoList = result.stream().map(question -> {
-	        QuestionDTO questionDTO = QuestionDTO.builder()
-	            .questionId(question.getQuestionId())
-	            .userId(question.getUserId().getUserId())
-	            .title(question.getTitle()) 
-	            .content(question.getContent())
-	            .createdAt(question.getCreatedAt())
-	            .status(question.getStatus()).build();
-	        return questionDTO;
-	    }).collect(Collectors.toList());
+		// 데이터 조회
+		Page<Question> result = questionRepo.findAllNotDeleted(QuestionStatus.DELETED, pageable);
 
-	    long totalCount = result.getTotalElements();
+		// Page<Notice>를 NoticeDTO 리스트로 변환
+		// result.get() 대신 result.stream()을 사용해야 합니다.
+		List<QuestionDTO> dtoList = result.stream().map(question -> {
+			QuestionDTO questionDTO = QuestionDTO.builder().questionId(question.getQuestionId())
+					.userId(question.getUserId().getUserId()).title(question.getTitle()).content(question.getContent())
+					.createdAt(question.getCreatedAt()).status(question.getStatus()).build();
+			return questionDTO;
+		}).collect(Collectors.toList());
 
-	    return PageResponseDTO.<QuestionDTO>withAll()
-	            .dtoList(dtoList)
-	            .totalCount(totalCount)
-	            .pageRequestDTO(pageRequestDTO)
-	            .build();
+		long totalCount = result.getTotalElements();
+
+		return PageResponseDTO.<QuestionDTO>withAll().dtoList(dtoList).totalCount(totalCount)
+				.pageRequestDTO(pageRequestDTO).build();
 	}
 
 	@Override
@@ -91,20 +88,24 @@ public class QuestionServiceImpl implements QuestionService {
 		q.setTitle(dto.getTitle());
 		q.setContent(dto.getContent());
 		q.setStatus(QuestionStatus.WAITING);
+
 		return questionRepo.save(q).getQuestionId();
 	}
 
 	@Override
 	public QuestionDTO read(Long qid) {
-		Optional<Question> result = questionRepo.findByQuestionIdAndStatusNot(qid, QuestionStatus.DELETED);
+		Question question = questionRepo.findByQuestionIdAndStatusNot(qid, QuestionStatus.DELETED)
+				.orElseThrow(() -> new IllegalArgumentException("Question not found with ID: " + qid));
 
-		if (result.isPresent()) {
-			Question question = result.get();
-			return new QuestionDTO(question.getQuestionId(), question.getUserId().getUserId(), question.getTitle(),
-					question.getContent(), question.getCreatedAt(), question.getStatus());
-		} else {
-			throw new IllegalArgumentException("Question not found with ID: " + qid);
-		}
+		// Question → QuestionDTO 변환
+		QuestionDTO qdto = QuestionDTO.builder().questionId(question.getQuestionId())
+				.userId(question.getUserId().getUserId()).title(question.getTitle()).content(question.getContent())
+				.createdAt(question.getCreatedAt()).status(question.getStatus()).build();
+
+		// 답변 Optional 조회 → DTO 변환 후 끼워넣기
+		answerRepo.findByQuestionId_QuestionId(qid).ifPresent(a -> qdto.setAnswer(toAnswerDTO(a)));
+
+		return qdto;
 	}
 
 	/**
@@ -142,14 +143,31 @@ public class QuestionServiceImpl implements QuestionService {
 	 * @throws NotFoundException  질문이 존재하지 않을 경우
 	 * @throws ForbiddenException 사용자 ID가 일치하지 않을 경우
 	 */
+
 	@Override
 	public void delete(Long qid, String userId) throws NotFoundException {
+		// 질문 로드
 		Question q = questionRepo.findById(qid).orElseThrow(NotFoundException::new);
-		// 사용자 ID 비교
-		if (!q.getUserId().getUserId().equals(userId)) {
+
+		// 로그인한 사용자 찾기
+		Member member = memberRepo.findById(userId).orElseThrow();
+
+		// 로그인한 사용자 관리자 여부
+		boolean isAdmin = member.getMemberRoleList() != null
+				&& member.getMemberRoleList().stream().anyMatch(r -> r.name().equals("ADMIN"));
+
+		// 관리자와 작성한 사용자가 아니면 에러처리
+		if (!q.getUserId().getUserId().equals(userId) && !isAdmin) {
 			throw new ForbiddenException();
 		}
+		
 		// 상태를 DELETED로 변경
 		q.setStatus(QuestionStatus.DELETED);
+	}
+
+	private AnswerDTO toAnswerDTO(Answer a) {
+		return AnswerDTO.builder().answerId(a.getAnswerId()).questionId(a.getQuestionId().getQuestionId())
+				.userId(a.getAdmin().getUserId()).adminName(a.getAdmin().getName()).content(a.getContent())
+				.createdAt(a.getCreatedAt()).updatedAt(a.getUpdatedAt()).build();
 	}
 }
