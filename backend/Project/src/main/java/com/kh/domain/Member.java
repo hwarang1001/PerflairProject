@@ -30,7 +30,7 @@ public class Member {
 	private String address;
 	private String phoneNum;
 	private boolean social;
-	
+
 	@ElementCollection(fetch = FetchType.LAZY)
 	@Builder.Default
 	private List<MemberRole> memberRoleList = new ArrayList<>();
@@ -42,9 +42,6 @@ public class Member {
 	public void clearRole() {
 		memberRoleList.clear();
 	}
-	public void changeNickname(String name) {
-		this.name = name;
-	}
 
 	public void changePw(String pw) {
 		this.pw = pw;
@@ -52,5 +49,13 @@ public class Member {
 
 	public void changeSocial(boolean social) {
 		this.social = social;
+	}
+
+	public void changeAddress(String address) {
+		this.address = address;
+	}
+
+	public void changePhoneNum(String phoneNum) {
+		this.phoneNum = phoneNum;
 	}
 }

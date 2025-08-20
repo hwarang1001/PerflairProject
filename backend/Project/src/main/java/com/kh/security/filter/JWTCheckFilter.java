@@ -115,7 +115,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
 		String path = request.getRequestURI();
 		log.info("check uri. .............. " + path);
-		// 이미지 조회 경로는 체크하지 않하고 싶을 때
+		// 이미지 조회 경로는 체크하지 안하고 싶을 때
 		if (path.startsWith("/api/product/view/")) {
 			return true;
 		}
@@ -128,6 +128,10 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 		if (path.startsWith("/api/member/signup")) {
 			return true;
 		}
+		if (path.startsWith("/api/notice/")) {
+			return true;
+		}
+		
 		return false;
 	}
 
