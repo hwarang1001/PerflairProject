@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ProductOptionDTO {
+	private Long oid;
 	private int price;
 	private int stock;
 	private int perfumeVol;
