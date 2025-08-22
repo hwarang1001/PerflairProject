@@ -28,9 +28,21 @@ const Header = () => {
           <div className="d-flex ms-auto">
             {/* 우측 상단 메뉴 */}
             <div className="d-flex gap-3 small">
-              <a href="/member/mypage" className="text-dark text-decoration-none">
-                마이페이지
-              </a>
+              {isAdmin ? (
+                <a
+                  href="/member/adminpage"
+                  className="text-dark text-decoration-none"
+                >
+                  관리자페이지
+                </a>
+              ) : (
+                <a
+                  href="/member/mypage"
+                  className="text-dark text-decoration-none"
+                >
+                  마이페이지
+                </a>
+              )}
               <a href="/cart" className="text-dark text-decoration-none">
                 장바구니
               </a>

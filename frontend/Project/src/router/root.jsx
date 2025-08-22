@@ -1,7 +1,9 @@
 import React, { Suspense, lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import Loading from "../page/Loading";
+
 const MainPage = lazy(() => import("../page/MainPage"));
+
 // product
 const ProductListPage = lazy(() => import("../page/product/ListPage"));
 const ProductReadPage = lazy(() => import("../page/product/ReadPage"));
@@ -15,21 +17,29 @@ const ProductAdminListPage = lazy(() =>
 const NoticeListPage = lazy(() => import("../page/notice/ListPage"));
 const NoticeReadPage = lazy(() => import("../page/notice/ReadPage"));
 const NoticeWritePage = lazy(() => import("../page/notice/WritePage"));
+
 // qna
 const QnaListPage = lazy(() => import("../page/qna/ListPage"));
 const QnaReadPage = lazy(() => import("../page/qna/ReadPage"));
 const QnaWritePage = lazy(() => import("../page/qna/WritePage"));
+
 // login
 const LoginPage = lazy(() => import("../page/login/LoginPage"));
 const RegisterPage = lazy(() => import("../page/login/RegisterPage"));
+
 // cart
 const CartPage = lazy(() => import("../page/cart/CartPage"));
 
 // payment
 const PaymentPage = lazy(() => import("../page/payment/PaymentPage.jsx"));
 
-// member (마이페이지)
+// member
 const MyPage = lazy(() => import("../page/member/MyPage"));
+const AdminPage = lazy(() => import("../page/member/AdminPage.jsx"));
+
+// review
+const ReviewListPage = lazy(() => import("../page/review/ListPage.jsx"));
+const ReviewReadPage = lazy(() => import("../page/review/ReadPage.jsx"));
 
 const root = createBrowserRouter([
   {
@@ -188,6 +198,31 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <MyPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/member/adminpage",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <AdminPage />
+      </Suspense>
+    ),
+  },
+  //review
+  {
+    path: "/review/list",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ReviewListPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/review/read/:id",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <ReviewReadPage />
       </Suspense>
     ),
   },

@@ -19,7 +19,7 @@ const useCustomLogin = () => {
   };
   const moveToPath = (path) => {
     //페이지 이동 replace:true 뒤로이동 방지
-    navigate({ pathname: path }, { replace: true });
+    navigate(path, { replace: true });
   };
   const moveToLogin = () => {
     //로그인 페이지로 이동
