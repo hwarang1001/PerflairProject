@@ -23,25 +23,25 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(exclude = "memberRoleList")
 public class Member {
-	@Id
-	private String userId;
-	private String pw;
-	private String name;
-	private String address;
-	private String phoneNum;
-	private boolean social;
+    @Id
+    private String userId;
+    private String pw;
+    private String name;
+    private String address;
+    private String phoneNum;
+    private boolean social;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@Builder.Default
-	private List<MemberRole> memberRoleList = new ArrayList<>();
+    @ElementCollection(fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<MemberRole> memberRoleList = new ArrayList<>();
 
-	public void addRole(MemberRole memberRole) {
-		memberRoleList.add(memberRole);
-	}
+    public void addRole(MemberRole memberRole) {
+        memberRoleList.add(memberRole);
+    }
 
-	public void clearRole() {
-		memberRoleList.clear();
-	}
+    public void clearRole() {
+        memberRoleList.clear();
+    }
 
 	public void changePw(String pw) {
 		this.pw = pw;

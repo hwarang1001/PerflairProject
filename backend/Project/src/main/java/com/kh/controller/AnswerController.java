@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,6 @@ import com.kh.repository.AnswerRepository;
 import com.kh.service.AnswerService;
 import com.kh.service.QuestionService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +34,7 @@ public class AnswerController {
 
 	/** 등록 - 유효성 위반 시 400 */
 	@PostMapping("/")
-	public ResponseEntity<?> register(@RequestBody @Valid AnswerDTO dto, @AuthenticationPrincipal MemberDTO memberDTO) {
+	public ResponseEntity<?> register(@RequestBody @Validated AnswerDTO dto, @AuthenticationPrincipal MemberDTO memberDTO) {
 
 		// ⭐️ MemberDTO에서 userId를 가져와 AnswerDTO에 설정
 		String userId = memberDTO.getUserId();
@@ -65,7 +65,7 @@ public class AnswerController {
 
 	/** 수정(내용만) - AnswerUpdateDTO */
 	@PutMapping("/{answerId}")
-	public ResponseEntity<?> modify(@PathVariable Long answerId, @RequestBody @Valid AnswerUpdateDTO dto) {
+	public ResponseEntity<?> modify(@PathVariable Long answerId, @RequestBody @Validated AnswerUpdateDTO dto) {
 		answerService.modify(answerId, dto.getContent());
 		return ResponseEntity.ok(Map.of("result", "SUCCESS"));
 	}
