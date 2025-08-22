@@ -3,7 +3,9 @@ import "../../App.css";
 import ProductCarousel from "../../include/ProductCarousel";
 import { getOne } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/productApi";
-
+import { getList, postReview } from "../../api/reviewApi";
+import useCustomLogin from "../../hook/useCustomLogin";
+import { postAdd } from "../../api/cartApi";
 const initState = {
   pno: 0,
   brand: "",
@@ -13,39 +15,26 @@ const initState = {
   options: [],
 };
 
-const dummyReviews = [
-  {
-    reviewer: "유저1",
-    rating: 5,
-    content: "정말 좋은 향수예요!",
-    date: "2025-08-08",
-  },
-  {
-    reviewer: "유저2",
-    rating: 4,
-    content: "향이 오래가고 좋아요.",
-    date: "2025-08-08",
-  },
-  { reviewer: "유저3", rating: 3, content: "무난해요.", date: "2025-08-08" },
-  {
-    reviewer: "유저4",
-    rating: 5,
-    content: "선물용으로 추천합니다.",
-    date: "2025-08-08",
-  },
-  {
-    reviewer: "유저5",
-    rating: 2,
-    content: "저는 별로였어요.",
-    date: "2025-08-08",
-  },
-];
+const reviewInitState = {
+  dtoList: [],
+  pageNumList: [],
+  pageRequestDTO: null,
+  prev: false,
+  next: false,
+  totoalCount: 0,
+  prevPage: 0,
+  nextPage: 0,
+  totalPage: 0,
+  current: 0,
+};
 
 const ReadComponent = ({ pno }) => {
   const [count, setCount] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0); // 선택된 옵션 index
   const [product, setProduct] = useState(initState);
+  const [review, setReview] = useState(reviewInitState);
+  const { moveToPath } = useCustomLogin();
 
   const options = product.options || [];
 
@@ -85,13 +74,117 @@ const ReadComponent = ({ pno }) => {
     }
   };
 
-  // 데이터 가져오기
+  // 상품 데이터, 리뷰 데이터 불러오기
   useEffect(() => {
-    getOne(pno).then((data) => {
-      console.log(data);
-      setProduct(data);
-    });
+    getOne(pno).then((data) => setProduct(data));
+    getList(pno).then((data) => setReview(data));
   }, [pno]);
+
+  // 모달 열림 상태 관리
+  const [showModal, setShowModal] = useState(false);
+
+  // 새 리뷰 입력 상태
+  const [newReview, setNewReview] = useState({
+    rating: 0,
+    content: "",
+    uploadFile: null,
+  });
+
+  // 모달 열기/닫기 함수
+  const openModal = () => setShowModal(true);
+  const closeModal = () => {
+    setShowModal(false);
+    setNewReview({ rating: 0, content: "", uploadFile: null }); // 초기화
+  };
+  // 리뷰 입력 변경 핸들러
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewReview((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  // 별점 선택 핸들러
+  const handleRatingChange = (rate) => {
+    setNewReview((prev) => ({ ...prev, rating: rate }));
+  };
+
+  // 파일 선택 핸들러
+  const handleFileChange = (e) => {
+    setNewReview((prev) => ({
+      ...prev,
+      uploadFile: e.target.files,
+    }));
+  };
+
+  // 유저 아이디 마스크처리
+  const maskUserId = (email) => {
+    if (!email || typeof email !== "string") return "익명";
+
+    const [local, domain] = email.split("@");
+
+    // 너무 짧은 이메일은 그대로 반환
+    if (!domain || local.length < 3) return email;
+
+    const visible = local.slice(0, 2); // 앞 2글자 보이기
+    const masked = "*".repeat(Math.max(local.length - 2, 1));
+
+    return `${visible}${masked}@${domain}`;
+  };
+
+  // 리뷰 등록 (여기서는 예시로 console.log)
+  const handleSubmitReview = async () => {
+    const formData = new FormData();
+
+    formData.append("pno", pno);
+    formData.append("content", newReview.content);
+    formData.append("rating", newReview.rating);
+
+    if (newReview.uploadFile) {
+      for (let i = 0; i < newReview.uploadFile.length; i++) {
+        formData.append("files", newReview.uploadFile[i]);
+      }
+    }
+
+    try {
+      const res = await postReview(formData); // 폼데이터 넘김
+      console.log("등록 완료", res);
+      // 리뷰 리스트 다시 불러오기 -> 리렌더링 유발
+      const updatedReviewList = await getList(pno);
+      setReview({ dtoList: updatedReviewList });
+      closeModal();
+    } catch (err) {
+      console.error("등록 실패", err);
+    }
+  };
+
+  // 이미지 클릭 핸들러
+  const onClickImage = (reviewId) => {
+    moveToPath(`/review/read/${reviewId}`);
+  };
+
+  // 장바구니 담기 핸들러
+  const handleAddToCart = async (e) => {
+    e.preventDefault(); // 페이지 새로고침 방지
+
+    // 선택한 옵션
+    const selectedOption = options[selectedIndex];
+
+    // 장바구니에 추가할 데이터 생성
+    const data = {
+      productOptionId: selectedOption.oid, // 상품 옵션 ID
+      qty: count, // 수량
+    };
+
+    try {
+      // postAdd 함수 호출 (비동기 처리)
+      await postAdd(data); // 데이터가 정상적으로 전송될 때까지 기다림
+      alert("장바구니 등록 성공"); // 성공 메시지
+    } catch (error) {
+      alert("장바구니 등록 실패"); // 실패 메시지
+      console.error("장바구니 등록 실패:", error); // 에러 콘솔에 출력
+    }
+  };
 
   return (
     <>
@@ -114,11 +207,11 @@ const ReadComponent = ({ pno }) => {
               {/* 현재 가격 */}
               <div className="fs-5 mb-4">
                 {options.length > 0 && (
-                  <span>{options[selectedIndex].price.toLocaleString()}원</span>
+                  <p>{options[selectedIndex].price.toLocaleString()}원</p>
                 )}
+                <h6 className="text-center mb-4">{product.pdesc}</h6>
                 <hr />
               </div>
-
               {/* 옵션 선택 */}
               <div className="mb-4 d-flex flex-wrap gap-3">
                 {options.map((opt, idx) => (
@@ -188,6 +281,7 @@ const ReadComponent = ({ pno }) => {
                 <button
                   className="btn btn-outline-dark flex-shrink-0 p-3"
                   type="button"
+                  onClick={handleAddToCart}
                 >
                   <i className="bi-cart-fill me-1"></i>
                   장바구니 담기
@@ -210,34 +304,191 @@ const ReadComponent = ({ pno }) => {
       <section className="py-5 bg-light">
         <div className="container px-4 px-lg-5">
           <h2 className="fw-bolder mb-4 text-center">리뷰</h2>
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-            {dummyReviews.map((review, idx) => (
-              <div className="col" key={idx}>
-                <div className="card h-100 shadow-sm">
-                  <div className="card-body">
-                    {product.uploadFileNames.length > 0 && (
-                      <img
-                        src={`${API_SERVER_HOST}/api/product/view/${product.uploadFileNames[0]}`}
-                        className="card-img mb-3"
-                      />
-                    )}
-                    <h6 className="card-title mb-1">{review.reviewer}</h6>
-                    <p className="mb-2">
-                      <span className="text-warning">
-                        {"★".repeat(review.rating)}
-                      </span>
-                      <span className="text-muted">
-                        {"☆".repeat(5 - review.rating)}
-                      </span>
-                    </p>
-                    <p className="card-text text-muted">{review.content}</p>
-                    <p className="card-text text-muted fs-6">{review.date}</p>
+          {review.dtoList.length === 0 ? (
+            <div className="text-center">
+              <p>등록된 리뷰가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="row">
+              {review.dtoList
+                .sort((a, b) => b.reviewId - a.reviewId) // reviewId 기준 내림차순 정렬
+                .slice(0, 5)
+                .map((rev, idx) => (
+                  <div
+                    key={idx}
+                    className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4"
+                    style={{ width: "20%" }}
+                  >
+                    <div className="card h-100 shadow-sm">
+                      <div className="card-body">
+                        {rev.uploadFileNames &&
+                        rev.uploadFileNames.length > 0 ? (
+                          <img
+                            src={`${API_SERVER_HOST}/api/product/view/${rev.uploadFileNames[0]}`}
+                            onClick={() => onClickImage(rev.reviewId)}
+                            style={{
+                              cursor: "pointer",
+                              width: "100%",
+                              height: "150px",
+                              objectFit: "cover",
+                            }}
+                            className="card-img mb-2"
+                          />
+                        ) : (
+                          <div className="text-center text-muted mb-2">
+                            이미지 없음
+                          </div>
+                        )}
+                        <p className="mb-1">
+                          <span className="text-warning fs-5">
+                            {"★".repeat(rev.rating || 0)}
+                          </span>
+                          <span className="text-muted fs-5">
+                            {"☆".repeat(5 - (rev.rating || 0))}
+                          </span>
+                        </p>
+                        <div className="mb-1">
+                          <strong>{maskUserId(rev.userId)}</strong>
+                        </div>
+                        <p
+                          className="card-text"
+                          style={{
+                            height: "2.8em",
+                            fontSize: "1rem",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {rev.content}
+                        </p>
+                        <p className="card-text text-muted fs-6">
+                          {rev.createdAt}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
+            </div>
+          )}
+          {/* 더보기 버튼 - 기능 없음, 중앙 정렬 */}
+          <div className="d-flex justify-content-center mt-4">
+            <button
+              className="btn btn-outline-dark"
+              onClick={() => {
+                console.log("더보기 버튼 클릭, pno:", pno);
+                moveToPath(`/review/list?pno=${pno}`);
+              }}
+            >
+              더보기
+            </button>
+          </div>
+          {/* 리뷰쓰기 버튼 오른쪽 하단 고정 */}
+          <div className="d-flex justify-content-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={openModal}
+              type="button"
+            >
+              리뷰쓰기
+            </button>
           </div>
         </div>
+        {/* 리뷰쓰기 모달 */}
+        {showModal && (
+          <div
+            className="modal show d-block"
+            tabIndex={-1}
+            role="dialog"
+            onClick={closeModal}
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div
+              className="modal-dialog"
+              role="document"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">리뷰 작성</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeModal}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">별점</label>
+                    <div>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          style={{
+                            fontSize: "1.5rem",
+                            color:
+                              newReview.rating >= star ? "#ffc107" : "#e4e5e9",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleRatingChange(star)}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="content" className="form-label">
+                      내용
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="content"
+                      name="content"
+                      rows="3"
+                      value={newReview.content}
+                      onChange={handleInputChange}
+                    ></textarea>
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="uploadFile" className="form-label">
+                      이미지 업로드 (선택)
+                    </label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      id="uploadFile"
+                      name="uploadFile"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeModal}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleSubmitReview}
+                    disabled={!newReview.content || newReview.rating === 0}
+                  >
+                    등록
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </>
   );
