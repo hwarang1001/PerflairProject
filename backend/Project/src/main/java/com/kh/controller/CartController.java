@@ -45,10 +45,10 @@ public class CartController {
 	}
 
 	/** 장바구니 아이템 삭제 */
-	@DeleteMapping("/{cino}")
-	public ResponseEntity<String> removeItem(@PathVariable Long cino) {
-		cartService.removeItem(cino);
-		return ResponseEntity.ok("삭제 완료");
+	@DeleteMapping("/")
+	public ResponseEntity<String> removeItems(@RequestBody List<Long> cinos) {
+	    cartService.removeItems(cinos); // 서비스에서 여러 아이템 삭제
+	    return ResponseEntity.ok("선택된 아이템들이 삭제되었습니다.");
 	}
 
 	/** 장바구니 수량 변경 */

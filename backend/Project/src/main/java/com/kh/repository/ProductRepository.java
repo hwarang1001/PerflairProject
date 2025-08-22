@@ -28,4 +28,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 			+ "where p.delFlag = false and op.price = ("
 			+ " select min(o.price) from ProductOption o where o.product = p" + ")")
 	Page<Object[]> selectList(Pageable pageable);
+	
+	// product 옵션으로 product 맵핑
+	@EntityGraph(attributePaths = { "options" })
+    @Query("select p from Product p join p.options op where op.oid = :optionId")
+    Optional<Product> findByOptionId(@Param("optionId") Long optionId);
 }

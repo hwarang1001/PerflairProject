@@ -1,6 +1,7 @@
 package com.kh.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -72,6 +73,8 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 	Long getSelectedCartTotalPrice(@Param("userId") String userId, @Param("cartItemIds") List<Long> cartItemIds);
 
 	List<CartItem> findByCart(Cart cart);
-
 	
+	 // 유저 ID와 상품 옵션 ID로 장바구니 아이템 찾기
+	@Query("SELECT ci FROM CartItem ci WHERE ci.cart.owner.userId = :userId AND ci.productOption.oid = :productOptionId")
+	Optional<CartItem> findByCartOwnerUserIdAndProductOptionId(String userId, Long productOptionId);
 }

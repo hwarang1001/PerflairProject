@@ -1,6 +1,7 @@
 package com.kh.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,22 +50,29 @@ public class CartServiceImpl implements CartService {
 		ProductOption option = product.getOptions().stream().filter(op -> op.getOid().equals(dto.getProductOptionId()))
 				.findFirst().orElseThrow(() -> new IllegalArgumentException("해당 옵션을 찾을 수 없습니다."));
 
-		// 4. 이미 장바구니에 있으면 수량 증가
-		CartItem existing = cartItemRepository.getItemOfPno(userId, product.getPno());
-		if (existing != null) {
-			existing.changeQty(existing.getQty() + dto.getQty());
+		// 4. 이미 장바구니에 있으면, 같은 상품과 옵션을 가진 아이템인지 확인 후 수량 증가
+		Optional<CartItem> existing = cartItemRepository.findByCartOwnerUserIdAndProductOptionId(userId,
+				dto.getProductOptionId());
+		if (existing.isPresent()) {
+			// existing.get()을 사용하여 Optional에서 CartItem 객체를 가져옴
+			CartItem item = existing.get();
+			item.changeQty(item.getQty() + dto.getQty());
 		} else {
+			// 기존 아이템이 없으면 새로운 아이템을 장바구니에 추가
 			CartItem item = CartItem.builder().cart(cart).productOption(option).qty(dto.getQty())
 					.pno(option.getProduct().getPno()).build();
 			cart.addCartItem(item);
 		}
 	}
 
-	/** 장바구니 아이템 삭제 */
-	public void removeItem(Long cino) {
-		CartItem item = cartItemRepository.findById(cino)
-				.orElseThrow(() -> new IllegalArgumentException("장바구니 아이템이 없습니다."));
-		cartItemRepository.delete(item);
+	/** 장바구니 선택 아이템 삭제 */
+	public void removeItems(List<Long> cinos) {
+		// cino 목록에 있는 모든 아이템을 삭제
+		List<CartItem> items = cartItemRepository.findAllById(cinos);
+		if (items.isEmpty()) {
+			throw new IllegalArgumentException("삭제할 아이템이 없습니다.");
+		}
+		cartItemRepository.deleteAll(items); // 여러 아이템을 한 번에 삭제
 	}
 
 	/** 장바구니 수량 변경 */
@@ -96,5 +104,4 @@ public class CartServiceImpl implements CartService {
 		return cartRepository.save(cart);
 	}
 
-	
 }
