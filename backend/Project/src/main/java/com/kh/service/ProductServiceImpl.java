@@ -150,7 +150,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 		List<ProductOptionDTO> optionDTOList = optionList.stream()
 				.sorted(Comparator.comparingInt(ProductOption::getPerfumeVol)) // PerfumeVol 오름차순정렬
-				.map(option -> ProductOptionDTO.builder().price(option.getPrice()).stock(option.getStock())
+				.map(option -> ProductOptionDTO.builder().oid(option.getOid()).price(option.getPrice()).stock(option.getStock())
 						.perfumeVol(option.getPerfumeVol()).build())
 				.toList();
 		productDTO.setOptions(optionDTOList);

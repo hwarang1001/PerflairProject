@@ -15,7 +15,7 @@ public interface CartService {
     void addItem(CartItemDTO dto, String userId);
 
     /** 장바구니 아이템 삭제 */
-    void removeItem(Long cino);
+    void removeItems(List<Long> cinos);
 
     /** 장바구니 수량 변경 */
     void changeQty(Long cino, int qty);
