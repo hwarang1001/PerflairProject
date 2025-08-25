@@ -1,0 +1,94 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* display:flex로 가운데 정렬해도 되지만, 모달이 fixed라 실효는 없음 */
+  z-index: 999;
+}
+
+/* 기본 모달 박스 */
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 50px 20px 20px 20px;
+  width: 400px;
+  max-width: 90vw;
+  height: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+/* 주소검색용: 사이즈만 확장 */
+.modal-content.postcode {
+  width: 520px;
+  max-width: 90vw;
+  height: 520px;
+}
+
+/* X 버튼 */
+.modal-close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: white;
+  border: none;
+  color: #888;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  transition: color 0.3s, background-color 0.3s;
+  z-index: 10;
+}
+.modal-close-button:hover {
+  color: #555;
+  background-color: #f0f0f0;
+}
+
+/* 드래그 핸들(상단 바) */
+.modal-drag-handle {
+  cursor: grab;
+  user-select: none;
+  touch-action: none; /* 터치/트랙패드 드래그 안정화 */
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* 누르는 동안만 커서 변경: JS로 클래스 토글 불필요 */
+.modal-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* 드래그 가능한 모달: fixed + transform 기반 이동 */
+.modal-content.draggable {
+  position: fixed; /* 부모 레이아웃 영향 배제 */
+  padding-top: 0; /* 핸들이 들어오므로 상단 여백 0 */
+  z-index: 1000; /* 오버레이(999)보다 위로 */
+  will-change: transform; /* transform만 힌트 */
+}
+
+/* (선택) 성능 힌트: 주소검색 모달은 transform만 바뀜 */
+.modal-content.postcode.draggable {
+  will-change: transform;
+}
+
+.address-find-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  gap: 2px; /* 두 줄 간격 살짝 */
+  padding: 8px 12px; /* 높이 확보 */
+  min-width: 110px; /* 필요시 버튼 폭 고정 */
+}
+
+.address-find-btn span {
+  display: block;
+}

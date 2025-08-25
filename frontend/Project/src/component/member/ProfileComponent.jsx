@@ -1,33 +1,43 @@
+// src/component/member/ProfileComponent.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyProfile, updateMyProfile } from "../../api/memberApi";
+import { getMyProfile, changePassword } from "../../api/memberApi";
 
-const initialForm = { name: "", email: "", phone: "" };
+const initialForm = {
+  name: "",
+  email: "",
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+};
 
-const ProfileComponent = () => {
+export default function ProfileComponent() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState("");
   const navigate = useNavigate();
 
-  // 내 정보 로드
+  // 프로필 로드: 이름/이메일만 조회용으로 채움
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       try {
-        const data = await getMyProfile(); // { name, email, phone, ... }
-        if (alive && data) setForm((prev) => ({ ...prev, ...data }));
+        const d = await getMyProfile(); // { name / realName, email ... }
+        if (!alive) return;
+        setForm((prev) => ({
+          ...prev,
+          name: d?.realName || d?.name || "",
+          email: d?.email ?? d?.userId ?? "",
+        }));
+        setUserId(d?.userId || "");
       } catch (error) {
         const status = error?.response?.status;
         if (status === 401) {
-          alert(
-            "로그인이 만료되었거나 인증 정보가 없습니다. 다시 로그인해주세요."
-          );
+          alert("로그인이 필요합니다. 다시 로그인해주세요.");
           navigate(`/login?redirect=${encodeURIComponent("/mypage")}`, {
             replace: true,
           });
-        } else if (status === 403) {
-          alert("접근 권한이 없습니다.");
         } else {
           console.error("프로필 불러오기 실패:", error);
           alert("프로필 정보를 불러오는 중 오류가 발생했습니다.");
@@ -41,45 +51,69 @@ const ProfileComponent = () => {
     };
   }, [navigate]);
 
-  // 입력 변경
-  const handleChange = (e) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  // 비밀번호 정책 (기존 PasswordComponent와 동일 규칙)
+  const pwPolicyOk =
+    form.newPassword.length >= 8 &&
+    /[a-z]/.test(form.newPassword) &&
+    /[0-9]/.test(form.newPassword);
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  // 저장
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return; // 중복 제출 방지
+  const clearAuthTokens = () => {
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("refreshToken");
+      // 필요하면 추가로 비우기
+      // localStorage.removeItem("login");
+    } catch {}
+  };
 
-    if (!form.name?.trim()) {
-      alert("이름을 입력해주세요.");
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    if (!form.currentPassword) {
+      alert("현재 비밀번호를 입력하세요.");
       return;
     }
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      alert("유효한 이메일 형식을 입력해주세요.");
+    if (!pwPolicyOk) {
+      alert("새 비밀번호는 8자 이상 알파벳, 숫자를 포함해야 합니다.");
+      return;
+    }
+    if (form.newPassword !== form.confirmPassword) {
+      alert("새 비밀번호 확인이 일치하지 않습니다.");
       return;
     }
 
     setLoading(true);
     try {
-      await updateMyProfile(form);
-      alert("내 정보가 저장되었습니다.");
-      // 필요 시 재조회:
-      // const fresh = await getMyProfile();
-      // setForm(prev => ({ ...prev, ...fresh }));
+      // 백엔드가 현재 비번 검증 + 변경을 처리
+      await changePassword(userId, {
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+      });
+      alert("비밀번호가 변경되었습니다. 다시 로그인 해주세요.");
+      // 폼 정리
+      setForm((f) => ({
+        ...f,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+      // 토큰 정리 후 로그인 화면으로
+      clearAuthTokens();
+      navigate("/login", { replace: true });
     } catch (error) {
-      const status = error?.response?.status;
-      if (status === 401) {
-        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-        navigate(`/login?redirect=${encodeURIComponent("/mypage")}`, {
-          replace: true,
-        });
-      } else {
-        console.error("프로필 저장 실패:", error);
-        const msg =
-          error?.response?.data?.message || "저장 중 오류가 발생했습니다.";
-        alert(msg);
-      }
+      console.error("비밀번호 변경 실패:", error);
+      const msg =
+        error?.response?.data?.message ||
+        "변경 중 오류가 발생했습니다. 현재 비밀번호를 다시 입력해 주세요.";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -87,7 +121,8 @@ const ProfileComponent = () => {
 
   return (
     <div className="mypage-form-wrapper controls-xl">
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={onSubmit} noValidate>
+        {/* 읽기 전용 정보 */}
         <div className="mb-4">
           <label htmlFor="name" className="form-label">
             이름
@@ -97,11 +132,8 @@ const ProfileComponent = () => {
             name="name"
             className="form-control"
             value={form.name}
-            onChange={handleChange}
-            placeholder="이름을 입력하세요"
-            disabled={loading}
-            required
-            autoComplete="name"
+            disabled
+            readOnly
           />
         </div>
 
@@ -112,43 +144,86 @@ const ProfileComponent = () => {
           <input
             id="email"
             name="email"
-            type="email"
             className="form-control"
             value={form.email}
-            onChange={handleChange}
-            placeholder="example@domain.com"
+            disabled
+            readOnly
+          />
+          <small className="text-muted">
+            이메일/이름 변경은 고객센터로 문의해주세요.
+          </small>
+        </div>
+
+        {/* 비밀번호 변경 섹션 */}
+        <hr className="myhub-sep" />
+
+        <div className="mb-4">
+          <label htmlFor="curPw" className="form-label">
+            현재 비밀번호
+          </label>
+          <input
+            id="curPw"
+            type="password"
+            name="currentPassword"
+            className="form-control"
+            value={form.currentPassword}
+            onChange={onChange}
+            placeholder="현재 비밀번호"
             disabled={loading}
             required
-            autoComplete="email"
+            autoComplete="current-password"
           />
         </div>
 
-        <div className="mb-5">
-          <label htmlFor="phone" className="form-label">
-            연락처
+        <div className="mb-4">
+          <label htmlFor="newPw" className="form-label">
+            새 비밀번호
           </label>
           <input
-            id="phone"
-            name="phone"
+            id="newPw"
+            type="password"
+            name="newPassword"
             className="form-control"
-            value={form.phone}
-            onChange={handleChange}
-            placeholder="010-1234-5678"
+            value={form.newPassword}
+            onChange={onChange}
+            placeholder="새 비밀번호"
             disabled={loading}
-            autoComplete="tel"
-            inputMode="tel"
-            // pattern="^01[0-9]-?\d{3,4}-?\d{4}$"
+            required
+            autoComplete="new-password"
+          />
+          <small
+            className={`form-text ${
+              pwPolicyOk ? "text-success" : "text-muted"
+            }`}
+          >
+            8자 이상 알파벳, 숫자 포함
+          </small>
+        </div>
+
+        <div className="mb-5">
+          <label htmlFor="confirmPw" className="form-label">
+            새 비밀번호 확인
+          </label>
+          <input
+            id="confirmPw"
+            type="password"
+            name="confirmPassword"
+            className="form-control"
+            value={form.confirmPassword}
+            onChange={onChange}
+            placeholder="새 비밀번호 확인"
+            disabled={loading}
+            required
+            autoComplete="new-password"
           />
         </div>
 
         <div className="qna-btn-row">
           <button type="submit" className="btn btn-mz-style" disabled={loading}>
-            {loading ? "저장 중..." : "저장"}
+            {loading ? "변경 중..." : "비밀번호 변경"}
           </button>
         </div>
       </form>
     </div>
   );
-};
-
-export default ProfileComponent;
+}
