@@ -1,55 +1,53 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { getMyProfile } from "../../api/memberApi";
 import ProfileComponent from "./ProfileComponent";
-import PasswordComponent from "./PasswordComponent";
-//import AddressComponent from "./AddressComponent";
-//import OrdersSection from "./OrdersSection";
-
+import AddressComponent from "./AddressComponent";
+import OrderComponent from "./OrderComponent";
 import "./MyPageComponent.css";
 
 export default function MyPage() {
   const loginState = useSelector((s) => s.login);
 
-  // 주문현황(더미) — 실제 API 연결 시 치환
-  const orderStat = { pending: 0, paid: 0, shipping: 0, delivered: 0 };
-
-  // 이름 폴백 계산
   const fallbackName =
-    loginState?.name || loginState?.nickname || loginState?.userId || "회원";
+    loginState?.name ||
+    loginState?.realName ||
+    loginState?.nickname ||
+    loginState?.userId ||
+    "회원";
 
-  // 프로필 표시용 상태
   const [me, setMe] = useState({ realName: fallbackName, email: "" });
 
-  // 펼침 제어
   const [openProfile, setOpenProfile] = useState(false);
   const [openSecurity, setOpenSecurity] = useState(false);
   const [openAddress, setOpenAddress] = useState(false);
   const [openOrders, setOpenOrders] = useState(false);
 
-  // 프로필 가져오기 (간소화 버전)
-  useEffect(() => {
-    getMyProfile()
-      .then((d) =>
-        setMe({
-          realName: d?.realName || fallbackName,
-          email: d?.email || "",
-        })
-      )
-      .catch(() => {
-        // 필요시 401 처리: location.assign("/login?redirect=/mypage");
+  const loadMe = useCallback(async () => {
+    try {
+      const d = await getMyProfile();
+      setMe({
+        realName: d?.realName ?? d?.name ?? fallbackName,
+        // 백엔드는 이메일을 userId 로 주기도 함
+        email: d?.email ?? d?.userId ?? "",
       });
+    } catch (e) {
+      // 401 등: 필요시 로그인 리다이렉트
+      // window.location.assign("/login?redirect=/mypage");
+    }
   }, [fallbackName]);
+
+  useEffect(() => {
+    loadMe();
+  }, [loadMe]);
 
   return (
     <section className="py-5 myhub-surface">
       <div className="container px-4 px-lg-5">
-        {/* ===== 공지사항 페이지와 동일한 톤의 헤더 ===== */}
         <div className="mb-5">
           <h1 className="text-center mb-5">마이페이지</h1>
           <hr />
         </div>
-        {/* =========================================== */}
 
         <div className="myhub-card rounded-4">
           {/* 유저 인사 */}
@@ -79,7 +77,8 @@ export default function MyPage() {
           </div>
           {openProfile && (
             <div className="myhub-panel">
-              <ProfileComponent />
+              {/* 저장 시 상단 요약도 즉시 반영되도록 콜백 전달 */}
+              <ProfileComponent onSaved={loadMe} />
             </div>
           )}
           <hr className="myhub-sep" />
@@ -93,7 +92,7 @@ export default function MyPage() {
               </div>
             </div>
             <div className="myhub-right">
-              <a href="/member/cart" className="btn btn-outline-dark btn-sm">
+              <a href="/cart" className="btn btn-outline-dark btn-sm">
                 이동
               </a>
             </div>
@@ -116,7 +115,7 @@ export default function MyPage() {
           </div>
           {openOrders && (
             <div className="myhub-panel">
-              <OrdersSection />
+              <OrderComponent />
             </div>
           )}
           <hr className="myhub-sep" />
@@ -137,7 +136,8 @@ export default function MyPage() {
           </div>
           {openAddress && (
             <div className="myhub-panel">
-              <AddressComponent />
+              {/* 주소 저장 후 상단 요약도 즉시 반영 */}
+              <AddressComponent onSaved={loadMe} />
             </div>
           )}
           <hr className="myhub-sep" />
@@ -170,14 +170,5 @@ export default function MyPage() {
         <div style={{ height: 24 }} />
       </div>
     </section>
-  );
-}
-
-function StatusChip({ label, value }) {
-  return (
-    <div className="myhub-chip">
-      <div className="myhub-chip-label">{label}</div>
-      <div className="myhub-chip-value">{value}</div>
-    </div>
   );
 }

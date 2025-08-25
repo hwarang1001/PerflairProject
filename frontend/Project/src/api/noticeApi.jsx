@@ -18,7 +18,7 @@ export const getNotice = async (id) => {
 };
 
 export const postNotice = async (noticeData) => {
-  const res = await jwtAxios.post(`${prefix}`, noticeData);
+  const res = await jwtAxios.post(`${prefix}/`, noticeData);
   return res.data;
 };
 
@@ -31,3 +31,4 @@ export const deleteNotice = async (id) => {
   const res = await jwtAxios.delete(`${prefix}/${id}`);
   return res.data;
 };
+  
