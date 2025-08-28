@@ -1,6 +1,6 @@
 package com.kh.domain;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,10 +45,14 @@ public class Payment {
 	private String payStatus;
 
 	private Long totalAmount;
-	
-	 @Column(name = "payment_date", nullable = false)
-	    private LocalDate paymentDate;
+
+	@Column(name = "payment_date", nullable = false)
+	private LocalDateTime paymentDate;
 
 	@OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<PaymentDetail> details = new ArrayList<>();
+
+	@ManyToOne
+	@JoinColumn(name = "address_id") // MemberAddress의 기본 키를 참조
+	private MemberAddress shippingAddress; // 배송지 정보를 담는 필드 추가
 }
