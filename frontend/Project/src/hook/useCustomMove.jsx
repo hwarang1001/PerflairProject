@@ -15,7 +15,7 @@ const useCustomMove = () => {
   const [refresh, setRefresh] = useState(false);
   const [queryParams] = useSearchParams();
   const page = getNum(queryParams.get("page"), 1);
-  const size = getNum(queryParams.get("size"), 10);
+  const size = getNum(queryParams.get("size"), 20);
   const queryDefault = createSearchParams({ page, size }).toString(); //새로 추가
 
   const moveToList = (pageParam) => {
@@ -76,12 +76,16 @@ const useCustomMove = () => {
       pathname: `../product/modify/${num}`,
     });
   };
+  const moveToPayment = (path, options = {}) => {
+    navigate(path, { replace: true, ...options });
+  };
   return {
     moveToList,
     moveToModify,
     moveToAdminList,
     moveToAdd,
     moveToRead,
+    moveToPayment,
     page,
     size,
   }; //moveToModify 추가

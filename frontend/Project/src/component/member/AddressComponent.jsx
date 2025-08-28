@@ -49,7 +49,7 @@ function splitPhoneParts(raw) {
 export default function AddressComponent({ onSaved }) {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [reloadFlag, setReloadFlag] = useState(false);
   const [showPostcode, setShowPostcode] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -63,7 +63,6 @@ export default function AddressComponent({ onSaved }) {
   const phone2Ref = useRef(null);
   const phone3Ref = useRef(null);
 
-  // 최초 로드: 순서 유지(정렬 안 함)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -71,17 +70,17 @@ export default function AddressComponent({ onSaved }) {
       try {
         let data = await getMyAddresses();
         let arr = Array.isArray(data) ? data : [];
-
-        // 기본 지정이 전혀 없으면 첫 항목만 기본으로 표시/저장(순서 변경 없음)
-        if (!arr.some((a) => a.isDefault === true) && arr.length > 0) {
-          const firstId = arr[0].id;
-          try {
-            await setDefaultAddress(firstId);
-          } catch {}
-          arr = arr.map((a, idx) => ({ ...a, isDefault: idx === 0 }));
+        // 기본 배송지 처리: 기본 배송지가 있으면 첫 번째 주소로 설정
+        if (arr.length > 0) {
+          // 기본 배송지 설정: 첫 번째 주소를 기본 배송지로 설정
+          arr = arr.map((addr, idx) => ({
+            ...addr,
+            isDefault: idx === 0, // 첫 번째 주소를 기본 배송지로 설정
+          }));
+          setList(arr);
+        } else {
+          setList([]);
         }
-
-        if (alive) setList(arr);
       } catch (e) {
         console.error("배송지 목록 로드 실패:", e);
         alert("배송지 목록을 불러오지 못했습니다.");
@@ -89,10 +88,11 @@ export default function AddressComponent({ onSaved }) {
         if (alive) setLoading(false);
       }
     })();
+
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadFlag]);
 
   // 일반 입력 핸들러
   const onChange = (e) => {
@@ -199,10 +199,8 @@ export default function AddressComponent({ onSaved }) {
       if (editingId) {
         const payload = { ...form, phone: phoneCombined };
         const saved = await updateAddress(editingId, payload);
-        if (form.isDefault) {
-          try {
-            await setDefaultAddress(editingId);
-          } catch {}
+
+        if (saved?.isDefault) {
           setList((prev) =>
             prev.map((a) =>
               a.id === editingId
@@ -213,28 +211,31 @@ export default function AddressComponent({ onSaved }) {
         } else {
           setList((prev) => prev.map((a) => (a.id === editingId ? saved : a)));
         }
+
         alert("배송지가 수정되었습니다.");
       } else {
         const payload = { ...form, phone: phoneCombined };
-        const saved = await addAddress(payload); // 새 항목은 '맨 뒤' 추가
-        if (form.isDefault && saved?.id != null) {
-          try {
-            await setDefaultAddress(saved.id);
-          } catch {}
-          setList((prev) =>
-            prev
-              .map((a) => ({ ...a, isDefault: false }))
-              .concat([{ ...saved, isDefault: true }])
-          );
+        const saved = await addAddress(payload);
+
+        if (saved?.isDefault) {
+          setList((prev) => [
+            saved,
+            ...prev
+              .filter((a) => a.id !== saved.id)
+              .map((a) => ({ ...a, isDefault: false })),
+          ]);
         } else {
           setList((prev) => prev.concat([saved]));
         }
+
         alert("새 배송지가 추가되었습니다.");
       }
+
       setEditingId(null);
       setForm(emptyForm);
       setMemoSelect("");
       setShowForm(false);
+      setReloadFlag((f) => !f); // 주소 목록 다시 로드 트리거
       onSaved?.();
     } catch (e2) {
       console.error(e2);
@@ -282,6 +283,7 @@ export default function AddressComponent({ onSaved }) {
     setLoading(true);
     try {
       await setDefaultAddress(id);
+      // isDefault 값을 갱신하여 상태 변경
       setList((arr) => arr.map((a) => ({ ...a, isDefault: a.id === id })));
       onSaved?.();
     } catch (e) {
@@ -411,7 +413,7 @@ export default function AddressComponent({ onSaved }) {
                     type="radio"
                     name="defaultAddr"
                     checked={addr.isDefault === true}
-                    onChange={() => onSelectDefault(addr.id)}
+                    onChange={() => onSelectDefault(addr.id)} // 기본 배송지 선택
                   />
                   <span className="small text-muted">현재 배송지로 지정</span>
                 </div>
@@ -436,7 +438,6 @@ export default function AddressComponent({ onSaved }) {
                   >
                     수정
                   </button>
-                  {/* 하나일 땐 삭제 버튼 자체를 렌더링하지 않음 */}
                   {!isSingle && (
                     <button
                       className="btn btn-outline-danger btn-sm"

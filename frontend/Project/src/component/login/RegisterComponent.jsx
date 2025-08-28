@@ -69,8 +69,6 @@ const RegisterComponent = () => {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
-
-    const fullAddress = `[${zonecode}] ${address} ${detailAddress}`;
     const fullPhoneNum = `${form.phone1}-${form.phone2}-${form.phone3}`;
 
     const dataToSend = {
@@ -78,7 +76,17 @@ const RegisterComponent = () => {
       pw,
       name,
       phoneNum: fullPhoneNum,
-      address: fullAddress,
+      social: false, // 소셜 여부는 false로 설정
+      // AddressDTO
+      addressDTO: {
+        receiverName: name, // 받는 분은 이름
+        phone: fullPhoneNum, // 전화번호
+        zonecode: zonecode, // 우편번호
+        address: address, // 기본 주소
+        detailAddress: detailAddress, // 상세 주소
+        memo: "", // 배송 메모는 빈 값으로 설정
+        isDefault: true, // 기본 배송지로 설정
+      },
     };
     console.log(dataToSend);
     try {

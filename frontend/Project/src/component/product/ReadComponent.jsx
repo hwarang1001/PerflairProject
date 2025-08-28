@@ -3,8 +3,9 @@ import "../../App.css";
 import ProductCarousel from "../../include/ProductCarousel";
 import { getOne } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/productApi";
-import { getList, postReview } from "../../api/reviewApi";
+import { getList } from "../../api/reviewApi";
 import useCustomLogin from "../../hook/useCustomLogin";
+import useCustomMove from "../../hook/useCustomMove";
 import { postAdd } from "../../api/cartApi";
 const initState = {
   pno: 0,
@@ -34,6 +35,7 @@ const ReadComponent = ({ pno }) => {
   const [selectedIndex, setSelectedIndex] = useState(0); // 선택된 옵션 index
   const [product, setProduct] = useState(initState);
   const [review, setReview] = useState(reviewInitState);
+  const { moveToPayment } = useCustomMove();
   const { moveToPath } = useCustomLogin();
 
   const options = product.options || [];
@@ -41,7 +43,7 @@ const ReadComponent = ({ pno }) => {
   // 총 가격 계산
   useEffect(() => {
     if (options.length > 0) {
-      setTotal(count * options[selectedIndex].price);
+      setTotal(count * options[selectedIndex].price); // 수량 * 선택 옵션의 가격
     }
   }, [count, selectedIndex, options]);
 
@@ -80,43 +82,6 @@ const ReadComponent = ({ pno }) => {
     getList(pno).then((data) => setReview(data));
   }, [pno]);
 
-  // 모달 열림 상태 관리
-  const [showModal, setShowModal] = useState(false);
-
-  // 새 리뷰 입력 상태
-  const [newReview, setNewReview] = useState({
-    rating: 0,
-    content: "",
-    uploadFile: null,
-  });
-
-  // 모달 열기/닫기 함수
-  const openModal = () => setShowModal(true);
-  const closeModal = () => {
-    setShowModal(false);
-    setNewReview({ rating: 0, content: "", uploadFile: null }); // 초기화
-  };
-  // 리뷰 입력 변경 핸들러
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewReview((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-  // 별점 선택 핸들러
-  const handleRatingChange = (rate) => {
-    setNewReview((prev) => ({ ...prev, rating: rate }));
-  };
-
-  // 파일 선택 핸들러
-  const handleFileChange = (e) => {
-    setNewReview((prev) => ({
-      ...prev,
-      uploadFile: e.target.files,
-    }));
-  };
-
   // 유저 아이디 마스크처리
   const maskUserId = (email) => {
     if (!email || typeof email !== "string") return "익명";
@@ -132,33 +97,7 @@ const ReadComponent = ({ pno }) => {
     return `${visible}${masked}@${domain}`;
   };
 
-  // 리뷰 등록 (여기서는 예시로 console.log)
-  const handleSubmitReview = async () => {
-    const formData = new FormData();
-
-    formData.append("pno", pno);
-    formData.append("content", newReview.content);
-    formData.append("rating", newReview.rating);
-
-    if (newReview.uploadFile) {
-      for (let i = 0; i < newReview.uploadFile.length; i++) {
-        formData.append("files", newReview.uploadFile[i]);
-      }
-    }
-
-    try {
-      const res = await postReview(formData); // 폼데이터 넘김
-      console.log("등록 완료", res);
-      // 리뷰 리스트 다시 불러오기 -> 리렌더링 유발
-      const updatedReviewList = await getList(pno);
-      setReview({ dtoList: updatedReviewList });
-      closeModal();
-    } catch (err) {
-      console.error("등록 실패", err);
-    }
-  };
-
-  // 이미지 클릭 핸들러
+  // 리뷰 이미지 클릭 핸들러
   const onClickImage = (reviewId) => {
     moveToPath(`/review/read/${reviewId}`);
   };
@@ -183,6 +122,43 @@ const ReadComponent = ({ pno }) => {
     } catch (error) {
       alert("장바구니 등록 실패"); // 실패 메시지
       console.error("장바구니 등록 실패:", error); // 에러 콘솔에 출력
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const selectedOption = options[selectedIndex];
+
+    const data = {
+      productOptionId: selectedOption.oid,
+      qty: count,
+    };
+
+    try {
+      const cino = await postAdd(data); // 응답에서 cino 받아옴
+      console.log("받은 cino:", cino);
+      if (!cino || isNaN(cino)) {
+        alert("상품 추가 실패: cino 없음");
+        return;
+      }
+      const itemData = {
+        cino: Number(cino),
+        productOptionId: selectedOption.oid,
+        pname: product.pname,
+        price: selectedOption.price,
+        perfumeVol: selectedOption.perfumeVol,
+        qty: count,
+        imageFile: product.uploadFileNames[0] || "",
+      };
+
+      moveToPayment("/payment", {
+        state: {
+          items: [itemData],
+          from: "direct",
+        },
+      });
+    } catch (error) {
+      console.error("구매하기 실패:", error);
+      alert("구매 중 문제가 발생했습니다.");
     }
   };
 
@@ -274,6 +250,7 @@ const ReadComponent = ({ pno }) => {
                 <button
                   className="btn btn-dark flex-shrink-0 p-3"
                   type="button"
+                  onClick={handleBuyNow}
                 >
                   <i className="bi-cart-fill me-1"></i>
                   구매하기
@@ -373,7 +350,7 @@ const ReadComponent = ({ pno }) => {
                 ))}
             </div>
           )}
-          {/* 더보기 버튼 - 기능 없음, 중앙 정렬 */}
+          {/* 더보기 버튼, 중앙 정렬 */}
           <div className="d-flex justify-content-center mt-4">
             <button
               className="btn btn-outline-dark"
@@ -385,110 +362,7 @@ const ReadComponent = ({ pno }) => {
               더보기
             </button>
           </div>
-          {/* 리뷰쓰기 버튼 오른쪽 하단 고정 */}
-          <div className="d-flex justify-content-end mb-3">
-            <button
-              className="btn btn-primary"
-              onClick={openModal}
-              type="button"
-            >
-              리뷰쓰기
-            </button>
-          </div>
         </div>
-        {/* 리뷰쓰기 모달 */}
-        {showModal && (
-          <div
-            className="modal show d-block"
-            tabIndex={-1}
-            role="dialog"
-            onClick={closeModal}
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          >
-            <div
-              className="modal-dialog"
-              role="document"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">리뷰 작성</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={closeModal}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">별점</label>
-                    <div>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          style={{
-                            fontSize: "1.5rem",
-                            color:
-                              newReview.rating >= star ? "#ffc107" : "#e4e5e9",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => handleRatingChange(star)}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="content" className="form-label">
-                      내용
-                    </label>
-                    <textarea
-                      className="form-control"
-                      id="content"
-                      name="content"
-                      rows="3"
-                      value={newReview.content}
-                      onChange={handleInputChange}
-                    ></textarea>
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="uploadFile" className="form-label">
-                      이미지 업로드 (선택)
-                    </label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      id="uploadFile"
-                      name="uploadFile"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileChange}
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={closeModal}
-                  >
-                    취소
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleSubmitReview}
-                    disabled={!newReview.content || newReview.rating === 0}
-                  >
-                    등록
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </section>
     </>
   );

@@ -1,26 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
 import {
   API_SERVER_HOST,
   deleteSelected,
   getCart,
   updateItemQty,
 } from "../../api/cartApi";
-
-// ====== 설정: 제목 위/아래 여백(px). 상단 공통 hr 의 margin-bottom 값과 동일하게 맞추세요 ======
-const TITLE_GAP = 24;
-
-// ====== 이미지 URL 규칙(서버 연동 시 이 함수만 수정) ======
-const API_HOST = import.meta.env.VITE_API_HOST ?? "";
-function toImageUrl(item) {
-  if (item?.imageFile?.startsWith("http")) return item.imageFile; // 1) 절대 URL
-  if (item?.imageFile) return `${API_HOST}/path-to-images/${item.imageFile}`; // 2) 상대 경로
-  return null; // 3) 없음 → FALLBACK_IMG
-}
-
-const FALLBACK_IMG =
-  "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=300&auto=format&fit=crop";
+import { useSelector } from "react-redux";
 
 // 초기 상태 설정
 const initState = [
@@ -37,27 +23,33 @@ const initState = [
 
 export default function CartComponent() {
   const navigate = useNavigate();
+  const loginState = useSelector((s) => s.login);
   const [cart, setCart] = useState(initState);
   const [checkedMap, setCheckedMap] = useState({});
-  const [loading, setLoading] = useState(true);
+  const isLoggedIn = Boolean(loginState?.userId);
 
-  // 1) 초기 로드(현재는 더미). 서버 연동 시 getCart()로 교체
+  useEffect(() => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
+
+  // 카트 데이터 호출
   useEffect(() => {
     // 데이터 로드 함수 호출
     getCart({})
       .then((data) => {
         setCart(data); // 데이터를 상태에 저장
-        setLoading(false); // 로딩 상태 종료
       })
       .catch((error) => {
         console.error("장바구니 데이터 로드 실패:", error);
-        setLoading(false); // 로딩 종료 후 에러 처리
       });
   }, []);
 
   const safeItems = Array.isArray(cart) ? cart : [];
 
-  // 2) 선택/전체 개수
+  // 선택/전체 개수
   const selectedCount = useMemo(
     () => safeItems.filter((it) => !!checkedMap[it.cino]).length,
     [safeItems, checkedMap]
@@ -65,7 +57,7 @@ export default function CartComponent() {
   const totalCount = safeItems.length;
   const allChecked = selectedCount > 0 && selectedCount === totalCount;
 
-  // 3) 합계(선택된 항목만 계산)
+  // 합계(선택된 항목만 계산)
   const totals = useMemo(() => {
     const selected = safeItems.filter((it) => checkedMap[it.cino]);
     const subtotal = selected.reduce(
@@ -76,7 +68,7 @@ export default function CartComponent() {
     return { subtotal, shipping, final: subtotal + shipping, selected };
   }, [safeItems, checkedMap]);
 
-  // 4) 전체선택/개별선택/수량/삭제
+  // 전체선택/개별선택/수량/삭제
   const handleToggleAll = (checked) => {
     const next = {};
     safeItems.forEach((it) => (next[it.cino] = checked));
@@ -88,7 +80,7 @@ export default function CartComponent() {
   const handleQty = async (cino, qty) => {
     const newQty = Math.max(1, Number(qty) || 1); // 수량은 최소 1로 설정
     try {
-      // updateItemQty 함수 호출하여 수량 변경
+      // updateItemQty 함수 호출하여 DB 수량 변경
       await updateItemQty(cino, newQty);
 
       // 수량 변경 후 상태 업데이트
@@ -110,7 +102,7 @@ export default function CartComponent() {
       .filter((it) => checkedMap[it.cino]) // 선택된 아이템만 필터링
       .map((it) => it.cino); // cino 값만 추출
     console.log(cinos);
-    if (!cinos.length) return; // 선택된 아이템이 없으면 반환
+    if (!cinos.length) return alert("아이템을 선택해주세요."); // 선택된 아이템이 없으면 반환
 
     try {
       // 선택된 아이템들 삭제 요청 (배치 삭제)
@@ -130,7 +122,7 @@ export default function CartComponent() {
     }
   };
 
-  // 5) 구매하기 → 선택상품만 결제 페이지로 전달(quantity → qty 매핑)
+  // 구매하기 → 선택상품만 결제 페이지로 전달(quantity → qty 매핑)
   const handlePurchase = () => {
     if (!totals.selected.length) {
       alert("구매할 상품을 선택해주세요.");
@@ -138,163 +130,157 @@ export default function CartComponent() {
     }
     const payload = totals.selected.map((it) => ({
       ...it,
-      qty: it.qty ?? 1, // Payment에서는 qty 사용
     }));
     navigate("/payment", { state: { items: payload, from: "cart" } });
   };
 
-  if (loading) return <div className="container py-5">로딩 중…</div>;
-
   return (
-    // 헤더 컨테이너와 폭 일치(양옆 안 튀게)
-    <div className="container-lg mx-auto my-5 px-3" style={{ maxWidth: 1100 }}>
-      <h2
-        className="text-center fw-semibold"
-        style={{ marginTop: TITLE_GAP, marginBottom: TITLE_GAP }}
-      >
-        장바구니
-      </h2>
-
-      <hr
-        className="border-top"
-        style={{ borderTopColor: "#e5e5e5", opacity: 1 }}
-      />
-
-      {/* 상단: 전체선택 + (선택/전체) + 선택삭제 */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="selectAll"
-            checked={allChecked}
-            onChange={(e) => handleToggleAll(e.target.checked)}
-          />
-          <label className="form-check-label ms-1" htmlFor="selectAll">
-            전체 선택{" "}
-            <span className="text-muted">
-              ({selectedCount} / {totalCount})
-            </span>
-          </label>
+    <section className="py-5">
+      <div className="container px-4 px-lg-5">
+        <div className="mb-5">
+          <h1 className="text-center mb-5">장바구니</h1>
+          <hr />
         </div>
-        <button className="btn btn-danger btn-sm" onClick={handleDelete}>
-          선택삭제
-        </button>
-      </div>
 
-      {/* 아이템 목록 */}
-      <div>
-        {safeItems.length === 0 ? (
-          <div className="text-center py-5 text-muted">
-            장바구니가 비어 있습니다.
+        {/* 상단: 전체선택 + (선택/전체) + 선택삭제 */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="form-check">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="selectAll"
+              checked={allChecked}
+              onChange={(e) => handleToggleAll(e.target.checked)}
+            />
+            <label className="form-check-label ms-1" htmlFor="selectAll">
+              전체 선택{" "}
+              <span className="text-muted">
+                ({selectedCount} / {totalCount})
+              </span>
+            </label>
           </div>
-        ) : (
-          safeItems.map((item) => {
-            const linePrice = (
-              Number(item.price || 0) * Number(item.qty || 0)
-            ).toLocaleString();
+          <button className="btn btn-danger btn-sm" onClick={handleDelete}>
+            선택삭제
+          </button>
+        </div>
 
-            return (
-              <div
-                key={item.cino}
-                className="d-flex align-items-center justify-content-between border p-3 mb-2 rounded-3 bg-white"
-              >
-                {/* 좌측: 체크 + 이미지 + 텍스트 */}
-                <div className="d-flex align-items-center gap-3 flex-grow-1">
-                  <div className="form-check mt-0">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id={`cb-${item.cino}`}
-                      checked={!!checkedMap[item.cino]}
-                      onChange={(e) => handleCheck(item.cino, e.target.checked)}
-                    />
-                  </div>
-                  <img
-                    src={
-                      item.imageFile?.length > 0
-                        ? `${API_SERVER_HOST}/api/product/view/${item.imageFile}`
-                        : "https://dummyimage.com/400x300/dee2e6/6c757d.jpg"
-                    }
-                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-                    alt={item.pname}
-                    className="rounded"
-                    style={{ width: 72, height: 72, objectFit: "cover" }}
-                  />
+        {/* 아이템 목록 */}
+        <div>
+          {safeItems.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              장바구니가 비어 있습니다.
+            </div>
+          ) : (
+            safeItems.map((item) => {
+              const linePrice = (
+                Number(item.price || 0) * Number(item.qty || 0)
+              ).toLocaleString();
 
-                  <div className="flex-grow-1">
-                    <div className="text-muted small fw-semibold">
-                      {item.pname}
+              return (
+                <div
+                  key={item.cino}
+                  className="d-flex align-items-center justify-content-between border p-3 mb-2 rounded-3 bg-white"
+                >
+                  {/* 좌측: 체크 + 이미지 + 텍스트 */}
+                  <div className="d-flex align-items-center gap-3 flex-grow-1">
+                    <div className="form-check mt-0">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`cb-${item.cino}`}
+                        checked={!!checkedMap[item.cino]}
+                        onChange={(e) =>
+                          handleCheck(item.cino, e.target.checked)
+                        }
+                      />
                     </div>
-                    <div className="fw-semibold">{item.pname}</div>
-                    <div className="text-muted small">{item.perfumeVol} ml</div>
-                  </div>
-                </div>
-
-                {/* 수량 컨트롤 */}
-                <div className="mx-3">
-                  <div
-                    className="input-group input-group-sm"
-                    style={{ width: 116 }}
-                  >
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => handleQty(item.cino, item.qty - 1)}
-                      aria-label="수량 감소"
-                    >
-                      −
-                    </button>
-                    <input
-                      className="form-control text-center"
-                      value={item.qty}
-                      onChange={(e) => handleQty(item.cino, e.target.value)}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      aria-label="수량"
+                    <img
+                      src={
+                        item.imageFile?.length > 0
+                          ? `${API_SERVER_HOST}/api/product/view/${item.imageFile}`
+                          : "https://dummyimage.com/400x300/dee2e6/6c757d.jpg"
+                      }
+                      alt={item.pname}
+                      className="rounded"
+                      style={{ width: 72, height: 72, objectFit: "cover" }}
                     />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => handleQty(item.cino, item.qty + 1)}
-                      aria-label="수량 증가"
+
+                    <div className="flex-grow-1">
+                      <div className="text-muted small fw-semibold">
+                        {item.pname}
+                      </div>
+                      <div className="fw-semibold">{item.pname}</div>
+                      <div className="text-muted small">
+                        {item.perfumeVol} ml
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 수량 컨트롤 */}
+                  <div className="mx-3">
+                    <div
+                      className="input-group input-group-sm"
+                      style={{ width: 116 }}
                     >
-                      +
-                    </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => handleQty(item.cino, item.qty - 1)}
+                        aria-label="수량 감소"
+                      >
+                        −
+                      </button>
+                      <input
+                        className="form-control text-center"
+                        value={item.qty}
+                        onChange={(e) => handleQty(item.cino, e.target.value)}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        aria-label="수량"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => handleQty(item.cino, item.qty + 1)}
+                        aria-label="수량 증가"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 우측 금액 */}
+                  <div className="text-end" style={{ width: 140 }}>
+                    <span className="fw-bold">{linePrice}</span>
+                    <span className="ms-1">원</span>
                   </div>
                 </div>
+              );
+            })
+          )}
+        </div>
 
-                {/* 우측 금액 */}
-                <div className="text-end" style={{ width: 140 }}>
-                  <span className="fw-bold">{linePrice}</span>
-                  <span className="ms-1">원</span>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+        {/* 합계 */}
+        <hr />
+        <div className="text-end">
+          <p className="mb-1">
+            총 상품 가격: <span>{totals.subtotal.toLocaleString()}</span>원
+          </p>
+          <p className="mb-1">
+            배송비: <span>{totals.shipping.toLocaleString()}</span>원
+          </p>
+          <h5 className="mt-2">
+            결제 예정 금액: <strong>{totals.final.toLocaleString()}</strong>원
+          </h5>
+        </div>
 
-      {/* 합계 */}
-      <hr />
-      <div className="text-end" style={{ marginRight: "2rem" }}>
-        <p className="mb-1">
-          총 상품 가격: <span>{totals.subtotal.toLocaleString()}</span>원
-        </p>
-        <p className="mb-1">
-          배송비: <span>{totals.shipping.toLocaleString()}</span>원
-        </p>
-        <h5 className="mt-2">
-          결제 예정 금액: <strong>{totals.final.toLocaleString()}</strong>원
-        </h5>
+        {/* 중앙 “구매하기” 버튼 */}
+        <div className="text-center mt-3">
+          <button className="btn btn-dark btn-lg px-5" onClick={handlePurchase}>
+            구매하기
+          </button>
+        </div>
       </div>
-
-      {/* 중앙 “구매하기” 버튼 */}
-      <div className="text-center mt-3">
-        <button className="btn btn-dark btn-lg px-5" onClick={handlePurchase}>
-          구매하기
-        </button>
-      </div>
-    </div>
+    </section>
   );
 }

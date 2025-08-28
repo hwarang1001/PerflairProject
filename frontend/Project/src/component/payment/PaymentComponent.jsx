@@ -1,331 +1,363 @@
-// src/component/payment/PaymentComponent.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
-import PaymentEditModal from "./PaymentEditModal.jsx";
-
-/* =========================================================
- * axios 로컬 인스턴스
- * - baseURL: VITE_API_HOST (없으면 DEV 기본 http://localhost:8080)
- * - Authorization: accessToken 자동 주입
- * =======================================================*/
-const API_HOST =
-  import.meta.env.VITE_API_HOST ||
-  (import.meta.env.DEV ? "http://localhost:8080" : "");
-
-const http = axios.create({
-  baseURL: API_HOST,
-  withCredentials: true,
-});
-
-http.interceptors.request.use((cfg) => {
-  const token =
-    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-  if (token) cfg.headers.Authorization = `Bearer ${token}`;
-  return cfg;
-});
-
-console.log("[Payment] API_HOST =", API_HOST, "| baseURL =", http.defaults.baseURL);
-
-/* 이미지 URL 도우미 */
-const toImageUrl = (row) => {
-  if (row?.imageUrl?.startsWith?.("http")) return row.imageUrl;
-  if (row?.imagePath) return `${API_HOST}${row.imagePath}`;
-  if (row?.imageId) return `${API_HOST}/api/files/${row.imageId}`;
-  return "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?q=80&w=300&auto=format&fit=crop";
-};
-
+import PaymentChangeModal from "./PaymentChangeModal.jsx";
+import { API_SERVER_HOST } from "../../api/cartApi.jsx";
+import { paymentPost } from "../../api/paymentApi.jsx";
+import { useSelector } from "react-redux";
+import { getMyAddresses, updateAddress } from "../../api/addressApi.jsx";
 /* 숫자 포맷터 */
 const C = (n) => (Number(n) || 0).toLocaleString("ko-KR");
 
-/* =========================================================
- * JWT 파서 (accessToken 에서 기본 배송지 폴백을 만들기 위함)
- * - Header.jsx 로그에 찍힌 토큰 payload: { address, name, phoneNum, userId, ... }
- * =======================================================*/
-function parseJwt(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const json = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-/* JWT 기반 폴백 주소 생성기 */
-function buildAddressFromJwt() {
-  const token =
-    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-  const claims = token ? parseJwt(token) : null;
-
-  if (!claims) return null;
-
-  // Header.jsx 로그 예시에서 확인된 키: address, name, phoneNum
-  return {
-    receiver: claims.name || "수취인",
-    phone: claims.phoneNum || "",
-    zipcode: "", // JWT에 우편번호가 없으므로 비워두고, 주소찾기 버튼으로 보완
-    address1: claims.address || "",
-    address2: "",
-    isDefault: true,
-  };
-}
+const initState = [
+  {
+    id: 0,
+    receiverName: "",
+    phone: "",
+    zonecode: "",
+    address: "",
+    detailAddress: "",
+    memo: "",
+    default: false,
+  },
+];
 
 export default function PaymentComponent() {
   const { state } = useLocation(); // Cart에서 넘어온 { items, from }
+  console.log(state?.items);
   const [items, setItems] = useState([]);
-  const [address, setAddress] = useState(null);
+  const [address, setAddress] = useState(initState);
   const [addrOpen, setAddrOpen] = useState(false);
-
-  // 배송 요청사항
+  const loginState = useSelector((s) => s.login);
+  const userId = loginState?.userId;
   const [reqType, setReqType] = useState("none"); // none | door | guard | custom
   const [reqText, setReqText] = useState("");
   const [doorPw, setDoorPw] = useState("");
+  const [memo, setMemo] = useState(""); // memo
 
-  /* -----------------------------------------------------
-   * 기본 배송지 조회
-   * 1) 백엔드 API 시도: GET /api/members/me/default-address
-   * 2) 404 등 실패 시: JWT 에서 폴백 생성
-   * ---------------------------------------------------*/
-  const loadDefaultAddress = async () => {
-    try {
-      const { data } = await http.get("/api/members/me/default-address");
-      setAddress(data); // { receiver, phone, zipcode, address1, address2, isDefault }
-    } catch (e) {
-      console.warn("[Payment] 기본 배송지 API 404 → JWT 폴백 사용", e?.response?.status);
-      const fallback = buildAddressFromJwt();
-      if (fallback) {
-        setAddress(fallback);
-      } else {
-        // 폴백도 없을 때: 최소 형태로라도 렌더되게 기본값 세팅
-        setAddress({
-          receiver: "",
-          phone: "",
-          zipcode: "",
-          address1: "",
-          address2: "",
-          isDefault: true,
-        });
-      }
-    }
-  };
+  // 기본배송지 를 찾음 (존재하지 않으면 배열에 첫번째 값사용)
+  const defaultAddress =
+    address.find((addr) => addr.default === true) || initState[0];
 
-  /* 초기 데이터 */
+  // 장바구니 && 상세페이지에서 받아온 데이터 저장
   useEffect(() => {
     if (Array.isArray(state?.items) && state.items.length) {
-      setItems(state.items); // { id/productId, name, price, qty, ... }
+      setItems(state.items); // Cart에서 전달된 상품 정보를 items 상태에 저장
+      window.scrollTo(0, 0);
     }
-    loadDefaultAddress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state?.items]);
 
-  /* 요청 메모 문자열 */
-  const requestMemo = useMemo(() => {
-    if (reqType === "door" && doorPw.trim())
-      return `문 앞에 놓아주세요 (공동현관 비밀번호: ${doorPw.trim()})`;
-    if (reqType === "custom" && reqText.trim()) return reqText.trim();
-    if (reqType === "guard") return "경비실에 맡겨주세요";
-    return "요청사항 없음";
-  }, [reqType, reqText, doorPw]);
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const addresses = await getMyAddresses();
+        setAddress(addresses || initState); // 받은 주소로 상태 업데이트
+      } catch (error) {
+        console.error("주소 가져오기 오류:", error);
+        setAddress(initState); // 오류 발생 시 기본값 설정
+      }
+    };
+    fetchAddresses(); // 컴포넌트 로드 시 한 번만 호출
+  }, []); // 의존성 배열을 빈 배열로 변경
 
-  /* 금액 합계 */
-  const summary = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 1), 0);
-    const shipping = subtotal > 0 ? 10000 : 0;
-    return { subtotal, shipping, total: subtotal + shipping };
-  }, [items]);
+  // 주소 상태 업데이트
+  const handleAddressSave = (updatedAddresses) => {
+    setAddress(updatedAddresses); // 주소 업데이트
+  };
 
-  /* 결제 진입 (카카오 Ready) */
-  const handlePay = async () => {
+  useEffect(() => {
+    // 주소가 변경된 후 UI에 반영되는지 확인
+    console.log("주소가 변경되었습니다:", address);
+  }, [address]); // address가 변경될 때마다 실행
+
+  useEffect(() => {
+    if (defaultAddress?.memo) {
+      let updatedMemo = defaultAddress.memo; // 기본값으로 가져온 메모값
+
+      // "문 앞에 놓아주세요" 처리
+      if (defaultAddress.memo.startsWith("문 앞에 놓아주세요")) {
+        // 비밀번호가 있을 경우 (괄호 안에 비밀번호가 포함되어 있을 경우)
+        if (
+          defaultAddress.memo.includes("(") &&
+          defaultAddress.memo.includes(")")
+        ) {
+          setReqType("door"); // 비밀번호가 포함되면 door로 설정
+        } else {
+          setReqType("door"); // 비밀번호가 없으면 door로 설정
+        }
+      }
+      // "직접 입력" 처리
+      else if (
+        defaultAddress.memo !== "요청사항 없음" &&
+        defaultAddress.memo !== "경비실에 맡겨주세요"
+      ) {
+        setReqType("custom"); // 사용자가 입력한 다른 요청사항은 custom으로 설정
+      }
+      // "경비실에 맡겨주세요"
+      else if (defaultAddress.memo === "경비실에 맡겨주세요") {
+        setReqType("guard");
+      }
+      // "요청사항 없음"
+      else if (
+        defaultAddress.memo === "요청사항 없음" ||
+        defaultAddress.memo === "" ||
+        defaultAddress.memo === null
+      ) {
+        setReqType("none");
+      }
+
+      // 메모 업데이트
+      setMemo(updatedMemo);
+    }
+  }, [address]); // address가 변경될 때마다 실행
+
+  useEffect(() => {
+    let updatedMemo = "";
+
+    // 요청사항 타입에 따른 메모 업데이트
+    if (reqType === "door") {
+      updatedMemo = "문 앞에 놓아주세요"; // 기본 메모 설정
+      if (doorPw.trim()) {
+        updatedMemo = `문 앞에 놓아주세요 (${doorPw.trim()})`; // 비밀번호가 있으면 추가
+      }
+    } else if (reqType === "custom" && reqText.trim()) {
+      updatedMemo = reqText.trim();
+    } else if (reqType === "guard") {
+      updatedMemo = "경비실에 맡겨주세요";
+    } else if (reqType === "none") {
+      updatedMemo = "요청사항 없음"; // "none"일 때만 "요청사항 없음"으로 설정
+    }
+
+    // 메모 상태가 업데이트되어야 할 때만 업데이트
+    if (updatedMemo !== memo) {
+      setMemo(updatedMemo);
+      updateRequestMemo(updatedMemo); // 서버로 메모 업데이트
+    }
+  }, [reqType, reqText, doorPw, memo]);
+
+  // 요청사항을 DB에 업데이트하는 함수
+  const updateRequestMemo = async (updatedMemo) => {
     try {
-      const payload = {
-        items: items.map((it) => ({
-          id: it.productId ?? it.id, // 서버 정책에 맞춤
-          name: it.name,
-          quantity: it.qty || 1,
-          price: it.price,
-        })),
-        amount: summary.total,
-        address,     // 기본 배송지(백/폴백 모두 동일 형태)
-        requestMemo, // 배송 요청사항
-      };
-
-      console.log("[Payment] ready payload =", payload);
-      const { data } = await http.post("/api/pay/kakao/ready", payload);
-      if (!data?.next_redirect_pc_url) throw new Error("결제 리다이렉트 URL이 없습니다.");
-      window.location.href = data.next_redirect_pc_url;
-    } catch (e) {
-      console.error("[Payment] 결제 준비 실패", e);
-      const msg =
-        e?.response?.data?.message ||
-        e?.message ||
-        "결제 준비 중 오류가 발생했습니다.";
-      alert(msg);
+      const updatedAddress = { ...defaultAddress, memo: updatedMemo };
+      const updated = await updateAddress(updatedAddress.id, updatedAddress); // 서버로 업데이트
+      setAddress(
+        address.map((addr) =>
+          addr.id === updatedAddress.id ? updatedAddress : addr
+        )
+      ); // 로컬 상태 업데이트
+    } catch (error) {
+      console.error("메모 업데이트 실패:", error);
     }
   };
 
-  if (!address) return <div className="container py-5">로딩 중…</div>;
+  const summary = useMemo(() => {
+    // 장바구니 아이템의 총합 계산
+    const subtotal = items.reduce(
+      (s, it) => s + (it.price || 0) * (it.qty || 1),
+      0
+    );
+    // 배송비는 무료로 설정
+    const shipping = 0;
+    // 최종 계산된 총액 (subtotal + shipping)
+    return { subtotal, shipping, total: subtotal + shipping };
+  }, [items]); // 'items' 배열이 변경될 때마다 다시 계산
+
+  // 결제하기 함수
+  const handlePayment = async () => {
+    // 주문 데이터 구성
+    const paymentData = {
+      userId: userId,
+      cinoList: items.map((it) => it.cino), // 결제할 상품 Cino 리스트
+      payMethod: "kakaopay", // 결제 방법 (카카오페이 등)
+      shippingAddressId: address[0]?.id || 1, // 기본배송지 ID를 사용
+    };
+    console.log(paymentData);
+
+    try {
+      await paymentPost(paymentData); // API 호출
+      alert("결제가 완료되었습니다!");
+      // 결제 완료 후 처리할 코드 (예: 결제 완료 페이지로 이동)
+    } catch (error) {
+      console.error("결제 처리 오류:", error);
+      alert("결제 처리 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
-    <div className="container-lg mx-auto my-5 px-3" style={{ maxWidth: 1100 }}>
-      {/* 윗줄 / 제목 / 아랫줄 */}
-      <hr className="border-top" style={{ borderTopColor: "#e5e5e5", opacity: 1 }} />
-      <h2 className="text-center fw-semibold my-3">주문/결제</h2>
-      <hr className="border-top" style={{ borderTopColor: "#e5e5e5", opacity: 1 }} />
-
-      {/* 주문상품 */}
-      <section className="mb-4">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div className="fw-semibold">주문상품</div>
-          <div className="text-muted small">{items.length}건</div>
+    <section className="py-5">
+      <div className="container px-4 px-lg-5 w-75">
+        <div className="mb-5">
+          <h1 className="text-center mb-5">주문 & 결제</h1>
+          <hr />
         </div>
-        <div className="border rounded-3 p-3">
-          {items.map((it) => (
-            <div
-              key={it.id ?? it.productId}
-              className="d-flex align-items-center justify-content-between py-2"
-            >
-              <div className="d-flex align-items-center gap-3">
-                <img
-                  src={toImageUrl(it)}
-                  alt={it.name}
-                  style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8 }}
-                />
-                <div>
-                  {it.brand && <div className="text-muted small fw-semibold">{it.brand}</div>}
-                  <div className="fw-normal">{it.name}</div>
-                  {it.volume && <div className="text-muted small">{it.volume}</div>}
+
+        {/* 주문상품 */}
+        <section className="mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="fw-semibold">주문상품</div>
+            <div className="text-muted small">{items.length}건</div>
+          </div>
+          <div className="border rounded-3 p-3">
+            {items.map((it) => (
+              <div
+                key={it.cino} // cino 또는 productId 사용
+                className="d-flex align-items-center justify-content-between py-2"
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <img
+                    src={
+                      it.imageFile?.length > 0
+                        ? `${API_SERVER_HOST}/api/product/view/${it.imageFile}`
+                        : "https://dummyimage.com/400x300/dee2e6/6c757d.jpg"
+                    }
+                    alt={it.pname}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      objectFit: "cover",
+                      borderRadius: 8,
+                    }}
+                  />
+                  <div>
+                    <div className="fw-normal">{it.pname}</div>
+                    <div className="text-muted small">{it.perfumeVol} ml</div>
+                  </div>
+                </div>
+                <div className="text-end" style={{ minWidth: 140 }}>
+                  <div className="text-muted small">수량 {it.qty || 1}</div>
+                  <div className="fw-semibold">
+                    {C((it.price || 0) * (it.qty || 1))}원
+                  </div>
                 </div>
               </div>
-              <div className="text-end" style={{ minWidth: 140 }}>
-                <div className="text-muted small">수량 {it.qty || 1}</div>
-                <div className="fw-semibold">
-                  {C((it.price || 0) * (it.qty || 1))}원
+            ))}
+          </div>
+        </section>
+
+        {/* 배송정보 */}
+        <section className="mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <div className="fw-semibold">배송정보</div>
+          </div>
+          <div className="border rounded-3 p-3">
+            {/* default: true인 주소만 보여주기 */}
+            <div key={defaultAddress.id}>
+              <span className="badge text-bg-light border me-2 fw-normal">
+                기본배송지
+              </span>
+              <div className="row g-2 mt-2">
+                <div className="col-12 col-md-6">
+                  <div className="text-muted small">받는 분</div>
+                  <div className="fw-semibold">
+                    {defaultAddress.receiverName || "수취인 정보 없음"}
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="text-muted small">휴대폰 번호</div>
+                  <div className="fw-semibold">
+                    {defaultAddress.phone || "전화번호 정보 없음"}
+                  </div>
+                </div>
+                <div className="col-12">
+                  <div className="text-muted small">주소</div>
+                  <div className="d-flex justify-content-between">
+                    <div className="fw-semibold">
+                      {defaultAddress.zonecode || ""}{" "}
+                      {defaultAddress.address || ""}{" "}
+                      {defaultAddress.detailAddress || ""}
+                    </div>
+                    <button
+                      className="btn btn-sm btn-dark"
+                      onClick={() => setAddrOpen(true)} // 주소 수정 모달 열기
+                    >
+                      주소 수정
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* 배송정보 */}
-      <section className="mb-4">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div className="fw-semibold">배송정보</div>
-          <button
-            className="btn btn-outline-secondary btn-sm"
-            onClick={() => setAddrOpen(true)}
-          >
-            변경
+        {/* 요청사항 */}
+        <section className="mb-4">
+          <div className="fw-semibold mb-2">배송 요청사항</div>
+          <div className="border rounded-3 p-3">
+            <div className="vstack gap-2">
+              {[
+                { key: "none", label: "요청사항 없음" },
+                { key: "door", label: "문 앞에 놓아주세요" },
+                { key: "guard", label: "경비실에 맡겨주세요" },
+                { key: "custom", label: "직접 입력" },
+              ].map((opt) => (
+                <label key={opt.key} className="form-check">
+                  <input
+                    type="radio"
+                    className="form-check-input"
+                    name="req"
+                    checked={reqType === opt.key}
+                    onChange={() => setReqType(opt.key)}
+                  />
+                  <span className="form-check-label ms-1">{opt.label}</span>
+                </label>
+              ))}
+              {reqType === "custom" && (
+                <input
+                  className="form-control"
+                  placeholder="요청사항을 입력하세요"
+                  value={reqText}
+                  onChange={(e) => setReqText(e.target.value)}
+                />
+              )}
+              {reqType === "door" && (
+                <input
+                  className="form-control"
+                  placeholder="공동현관 비밀번호(선택)"
+                  value={doorPw}
+                  onChange={(e) => setDoorPw(e.target.value)}
+                />
+              )}
+            </div>
+            <div className="text-muted small mt-2">
+              요청 메모 미리보기: {memo}
+            </div>
+          </div>
+        </section>
+
+        {/* 결제금액 */}
+        <section className="mb-4">
+          <div className="fw-semibold mb-2">결제금액</div>
+          <div className="border rounded-3 p-3">
+            <div className="d-flex justify-content-between py-1">
+              <span className="text-muted">주문금액</span>
+              <span className="fw-normal">{C(summary.subtotal)}원</span>
+            </div>
+            <div className="d-flex justify-content-between py-1">
+              <span className="text-muted">배송비</span>
+              <span className="fw-normal">무료</span>
+            </div>
+            <hr className="my-3" />
+            <div className="d-flex justify-content-between">
+              <strong className="fw-semibold">최종 결제 금액</strong>
+              <strong className="fw-semibold">{C(summary.total)}원</strong>
+            </div>
+          </div>
+        </section>
+
+        {/* 결제 버튼 */}
+        <div className="text-center">
+          <button className="btn btn-dark btn-lg px-5" onClick={handlePayment}>
+            {C(summary.total)}원 결제하기 (카카오페이)
           </button>
         </div>
-        <div className="border rounded-3 p-3">
-          <span className="badge text-bg-light border me-2 fw-normal">기본배송지</span>
-          <div className="row g-2 mt-2">
-            <div className="col-12 col-md-6">
-              <div className="text-muted small">받는 분</div>
-              <div className="fw-semibold">{address.receiver}</div>
-            </div>
-            <div className="col-12 col-md-6">
-              <div className="text-muted small">휴대폰 번호</div>
-              <div className="fw-semibold">{address.phone}</div>
-            </div>
-            <div className="col-12">
-              <div className="text-muted small">주소</div>
-              <div className="fw-semibold">
-                ({address.zipcode}) {address.address1} {address.address2}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* 요청사항 */}
-      <section className="mb-4">
-        <div className="fw-semibold mb-2">배송 요청사항</div>
-        <div className="border rounded-3 p-3">
-          <div className="vstack gap-2">
-            {[
-              { key: "none", label: "요청사항 없음" },
-              { key: "door", label: "문 앞에 놓아주세요" },
-              { key: "guard", label: "경비실에 맡겨주세요" },
-              { key: "custom", label: "직접 입력" },
-            ].map((opt) => (
-              <label key={opt.key} className="form-check">
-                <input
-                  type="radio"
-                  className="form-check-input"
-                  name="req"
-                  checked={reqType === opt.key}
-                  onChange={() => setReqType(opt.key)}
-                />
-                <span className="form-check-label ms-1">{opt.label}</span>
-              </label>
-            ))}
-            {reqType === "custom" && (
-              <input
-                className="form-control"
-                placeholder="요청사항을 입력하세요"
-                value={reqText}
-                onChange={(e) => setReqText(e.target.value)}
-              />
-            )}
-            {reqType === "door" && (
-              <input
-                className="form-control"
-                placeholder="공동현관 비밀번호(선택)"
-                value={doorPw}
-                onChange={(e) => setDoorPw(e.target.value)}
-              />
-            )}
-          </div>
-          <div className="text-muted small mt-2">
-            요청 메모 미리보기: {requestMemo}
-          </div>
-        </div>
-      </section>
-
-      {/* 결제금액 */}
-      <section className="mb-4">
-        <div className="fw-semibold mb-2">결제금액</div>
-        <div className="border rounded-3 p-3">
-          <div className="d-flex justify-content-between py-1">
-            <span className="text-muted">주문금액</span>
-            <span className="fw-normal">{C(summary.subtotal)}원</span>
-          </div>
-          <div className="d-flex justify-content-between py-1">
-            <span className="text-muted">배송비</span>
-            <span className="fw-normal">{C(summary.shipping)}원</span>
-          </div>
-          <hr className="my-3" />
-          <div className="d-flex justify-content-between">
-            <strong className="fw-semibold">최종 결제 금액</strong>
-            <strong className="fw-semibold">{C(summary.total)}원</strong>
-          </div>
-        </div>
-      </section>
-
-      {/* 결제 버튼 */}
-      <div className="text-center">
-        <button className="btn btn-dark btn-lg px-5" onClick={handlePay}>
-          {C(summary.total)}원 결제하기 (카카오페이)
-        </button>
+        {/* 주소 수정 모달 */}
+        <PaymentChangeModal
+          open={addrOpen}
+          addressList={address}
+          onClose={() => setAddrOpen(false)}
+          onSave={handleAddressSave} // 주소 저장 함수 전달
+        />
       </div>
-
-      {/* 주소 수정 모달 */}
-      <PaymentEditModal
-        open={addrOpen}
-        initial={address}
-        onClose={() => setAddrOpen(false)}
-        onSave={(addr) => setAddress(addr)}
-      />
-    </div>
+    </section>
   );
 }
