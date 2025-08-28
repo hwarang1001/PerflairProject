@@ -66,12 +66,12 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Override
-	public PageResponseDTO<ReviewDTO> list(PageRequestDTO pageRequestDTO) {
+	public PageResponseDTO<ReviewDTO> list(Long pno, PageRequestDTO pageRequestDTO) {
 		log.info("getList ");
 		// 페이지 시작 번호가 0 부터 시작하므로
 		Pageable pageable = PageRequest.of(pageRequestDTO.getPage() - 1, pageRequestDTO.getSize(),
 				Sort.by("reviewId").descending());
-		Page<Object[]> result = reviewRepository.selectList(pageable);
+		Page<Object[]> result = reviewRepository.selectListByProduct(pno, pageable);
 		List<ReviewDTO> dtoList = result.get().map(arr -> {
 			Review review = (Review) arr[0];
 			ReviewImage reviewImage = (ReviewImage) arr[1];

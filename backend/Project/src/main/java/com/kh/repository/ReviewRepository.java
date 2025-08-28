@@ -13,10 +13,12 @@ import com.kh.domain.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
+	// 리뷰 상세 출력
     @EntityGraph(attributePaths = { "member","product", "imageList" })
     @Query("select r from Review r where r.reviewId = :reviewId")
     Optional<Review> selectOne(@Param("reviewId") Long reviewId);
 
-    @Query("select r, ri from Review r left join r.imageList ri where ri.ord = 0")
-    Page<Object[]> selectList(Pageable pageable);
+    // 해당 상품 리뷰 리스트 출력
+    @Query("select r, ri from Review r left join r.imageList ri where r.product.pno = :pno and ri.ord = 0")
+    Page<Object[]> selectListByProduct(@Param("pno") Long pno, Pageable pageable);
 }

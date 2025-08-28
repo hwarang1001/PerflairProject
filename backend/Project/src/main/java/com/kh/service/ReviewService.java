@@ -15,6 +15,6 @@ public interface ReviewService {
 	// 리뷰 삭제
 	void remove(Long reviewId);
 
-	// 리뷰 목록 조회 (페이징 처리)
-	PageResponseDTO<ReviewDTO> list(PageRequestDTO pageRequestDTO);
+	// 리뷰 해당 상품 목록 조회 (페이징 처리)
+	PageResponseDTO<ReviewDTO> list(Long pno, PageRequestDTO pageRequestDTO);
 }
