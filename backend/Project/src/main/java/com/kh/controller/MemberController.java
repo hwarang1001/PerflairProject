@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.dto.AddressDTO;
 import com.kh.dto.MemberDTO;
 import com.kh.dto.MemberModifyDTO;
 import com.kh.dto.MemberSignupDTO;
@@ -68,7 +69,7 @@ public class MemberController {
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody MemberSignupDTO signupDTO) {
 		try {
-			memberService.signup(signupDTO);
+			memberService.signup(signupDTO, signupDTO.getAddressDTO());
 			return ResponseEntity.ok("회원가입이 성공적으로 완료되었습니다.");
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("회원가입에 실패했습니다: " + e.getMessage());

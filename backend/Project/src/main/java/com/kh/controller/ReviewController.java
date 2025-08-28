@@ -64,10 +64,10 @@ public class ReviewController {
 	}
 
 	@GetMapping("/list")
-	public PageResponseDTO<ReviewDTO> list(PageRequestDTO pageRequestDTO) {
+	public PageResponseDTO<ReviewDTO> list(@RequestParam Long pno, PageRequestDTO pageRequestDTO) {
 		log.info("list............." + pageRequestDTO);
 
-		return service.list(pageRequestDTO);
+		return service.list(pno, pageRequestDTO);
 	}
 
 	@DeleteMapping("/{reviewId}")

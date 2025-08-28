@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.domain.Member;
 import com.kh.domain.MemberRole;
+import com.kh.dto.AddressDTO;
 import com.kh.dto.MemberModifyDTO;
 import com.kh.dto.MemberSignupDTO;
 import com.kh.repository.MemberRepository;
@@ -22,33 +23,33 @@ public class MemberServiceImpl implements MemberService {
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final AddressService addressService; 
 	@Override
 	public void modifyMember(MemberModifyDTO memberModifyDTO) {
 		Optional<Member> result = memberRepository.findById(memberModifyDTO.getUserId());
 		Member member = result.orElseThrow();
 
 		member.changePw(passwordEncoder.encode(memberModifyDTO.getPw()));
-		member.changeAddress(memberModifyDTO.getAddress());
 		member.changePhoneNum(memberModifyDTO.getPhoneNum());
 		memberRepository.save(member);
 	}
 	@Override
-	public void signup(MemberSignupDTO dto) {
-		if (memberRepository.existsById(dto.getUserId())) {
+	public void signup(MemberSignupDTO memberDTO, AddressDTO addressDTO) {
+		if (memberRepository.existsById(memberDTO.getUserId())) {
             throw new RuntimeException("이미 존재하는 아이디입니다.");
         }
 
         Member member = Member.builder()
-                .userId(dto.getUserId())
-                .pw(passwordEncoder.encode(dto.getPw()))
-                .name(dto.getName())
-                .address(dto.getAddress())
-                .phoneNum(dto.getPhoneNum())
+                .userId(memberDTO.getUserId())
+                .pw(passwordEncoder.encode(memberDTO.getPw()))
+                .name(memberDTO.getName())
+                .phoneNum(memberDTO.getPhoneNum())
                 .social(false)
                 .build();
-        
         member.addRole(MemberRole.USER);
         memberRepository.save(member);
+        
+        addressService.add(memberDTO.getUserId(), addressDTO);
 	}
 	
 //	// 💡 로그인 로직

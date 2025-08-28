@@ -22,13 +22,12 @@ public class MemberDTO extends User {
 	private String userId;
 	private String pw;
 	private String name;
-	private String address;
 	private String phoneNum;
 	private boolean social;
 	private List<String> roleNames = new ArrayList<>();
 
 	// 🔑 비밀번호는 부모 클래스(User)에만 전달하고, Claims에는 저장하지 않음
-    public MemberDTO(String userId, String pw, String name, String address, String phoneNum, boolean social, List<String> roleNames) {
+    public MemberDTO(String userId, String pw, String name, String phoneNum, boolean social, List<String> roleNames) {
         super(userId, pw,
             roleNames.stream()
                      .map(str -> new SimpleGrantedAuthority("ROLE_" + str))
@@ -37,8 +36,7 @@ public class MemberDTO extends User {
         this.name = name;
         
         // 🚨 이 부분에서 null 체크 로직을 추가했습니다.
-        // address와 phoneNum이 null일 경우 빈 문자열로 초기화합니다.
-        this.address = (address != null) ? address : "";
+        // phoneNum이 null일 경우 빈 문자열로 초기화합니다.
         this.phoneNum = (phoneNum != null) ? phoneNum : "";
         
         this.social = social;
@@ -50,7 +48,6 @@ public class MemberDTO extends User {
         Map<String, Object> dataMap = new HashMap<>();
         dataMap.put("userId", userId);
         dataMap.put("name", name);
-        dataMap.put("address", address);
         dataMap.put("phoneNum", phoneNum);
         dataMap.put("social", social);
         dataMap.put("roleNames", roleNames);

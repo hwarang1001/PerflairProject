@@ -27,7 +27,6 @@ public class Member {
     private String userId;
     private String pw;
     private String name;
-    private String address;
     private String phoneNum;
     private boolean social;
 
@@ -49,10 +48,6 @@ public class Member {
 
 	public void changeSocial(boolean social) {
 		this.social = social;
-	}
-
-	public void changeAddress(String address) {
-		this.address = address;
 	}
 
 	public void changePhoneNum(String phoneNum) {
