@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { getNoticeList } from "../../api/noticeApi";
+import PageComponent from "../common/PageComponent";
 import useCustomMove from "../../hook/useCustomMove";
 import "./ListComponent.css";
 import "../../App.css";
@@ -20,7 +21,7 @@ const initState = {
 };
 
 const ListComponent = () => {
-  const { page, size } = useCustomMove();
+  const { page, size, moveToNoticeList } = useCustomMove();
   const [serverData, setServerData] = useState(initState);
 
   const loginInfo = useSelector((state) => state.login);
@@ -94,6 +95,7 @@ const ListComponent = () => {
           )}
         </div>
       </div>
+      <PageComponent serverData={serverData} moveToList={moveToNoticeList} />
     </section>
   );
 };

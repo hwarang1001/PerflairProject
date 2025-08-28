@@ -1,0 +1,37 @@
+/* 페이징 버튼 전체 컨테이너 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+/* 페이징 버튼 개별 스타일 */
+.page-item .page-link {
+    color: #6c757d; /* 텍스트 색상 */
+    border: 1px solid #dee2e6; /* 테두리 색상 */
+    background-color: #fff; /* 배경색 */
+    margin: 0 4px; /* 버튼 간 간격 */
+    border-radius: 4px; /* 모서리 둥글게 */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* 마우스 오버 시 스타일 */
+.page-item .page-link:hover {
+    color: #fff;
+    background-color: #8c7851; /* 공지사항 작성 버튼 색상과 유사하게 */
+    border-color: #8c7851;
+}
+
+/* 활성화된 (현재 페이지) 버튼 스타일 */
+.page-item.active .page-link {
+    color: #fff;
+    background-color: #6a5a41; /* 공지사항 작성 버튼 색상 */
+    border-color: #6a5a41;
+}
+
+/* 비활성화된 버튼 스타일 */
+.page-item.disabled .page-link {
+    color: #adb5bd;
+    pointer-events: none;
+    cursor: default;
+}

@@ -79,6 +79,87 @@ const useCustomMove = () => {
   const moveToPayment = (path, options = {}) => {
     navigate(path, { replace: true, ...options });
   };
+
+  //notice
+  const moveToNoticeList = (pageParam) => {
+    let queryStr = "";
+    if (pageParam) {
+      const pageNum = getNum(pageParam.page, page);
+      const sizeNum = getNum(pageParam.size, size);
+      queryStr = createSearchParams({
+        page: pageNum,
+        size: sizeNum,
+      }).toString();
+    } else {
+      queryStr = queryDefault;
+    }
+
+    navigate({
+      pathname: `../notice/`,
+      search: queryStr,
+    });
+    setRefresh(!refresh); //추가
+  };
+  //qna
+  const moveToQnaList = (pageParam) => {
+    let queryStr = "";
+    if (pageParam) {
+      const pageNum = getNum(pageParam.page, page);
+      const sizeNum = getNum(pageParam.size, size);
+      queryStr = createSearchParams({
+        page: pageNum,
+        size: sizeNum,
+      }).toString();
+    } else {
+      queryStr = queryDefault;
+    }
+
+    navigate({
+      pathname: `../qna/`,
+      search: queryStr,
+    });
+    setRefresh(!refresh); //추가
+  };
+  //product
+  const moveToProductList = (pageParam) => {
+    let queryStr = "";
+    if (pageParam) {
+      const pageNum = getNum(pageParam.page, page);
+      const sizeNum = getNum(pageParam.size, size);
+      queryStr = createSearchParams({
+        page: pageNum,
+        size: sizeNum,
+      }).toString();
+    } else {
+      queryStr = queryDefault;
+    }
+
+    navigate({
+      pathname: `../product/list`,
+      search: queryStr,
+    });
+    setRefresh(!refresh); //추가
+  };
+  const moveToAdminProductList = (pageParam) => {
+    let queryStr = "";
+    if (pageParam) {
+      const pageNum = getNum(pageParam.page, page);
+      const sizeNum = getNum(pageParam.size, size);
+      queryStr = createSearchParams({
+        page: pageNum,
+        size: sizeNum,
+      }).toString();
+    } else {
+      queryStr = queryDefault;
+    }
+
+    navigate({
+      pathname: `../product/admin/list`,
+      search: queryStr,
+    });
+    setRefresh(!refresh); //추가
+  };
+
   return {
     moveToList,
     moveToModify,
@@ -86,6 +167,10 @@ const useCustomMove = () => {
     moveToAdd,
     moveToRead,
     moveToPayment,
+    moveToNoticeList,
+    moveToQnaList,
+    moveToProductList,
+    moveToAdminProductList,
     page,
     size,
   }; //moveToModify 추가

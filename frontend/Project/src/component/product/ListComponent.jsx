@@ -1,6 +1,7 @@
 import { getList } from "../../api/productApi";
 import { API_SERVER_HOST } from "../../api/productApi";
 import { useEffect, useState } from "react";
+import PageComponent from "../common/PageComponent";
 import useCustomMove from "../../hook/useCustomMove";
 
 const host = API_SERVER_HOST;
@@ -179,6 +180,7 @@ const ListComponent = () => {
           </div>
         </div>
       </div>
+      {/* <PageComponent serverData={serverData} moveToList={moveToProductList} /> */}
     </section>
   );
 };

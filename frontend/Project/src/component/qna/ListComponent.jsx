@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { getQnaList, getQna } from "../../api/qnaApi"; // 상세 호출 쓰는 경우
 import useCustomLogin from "../../hook/useCustomLogin";
+import PageComponent from "../common/PageComponent";
 import useCustomMove from "../../hook/useCustomMove";
 import "./ListComponent.css";
 import "../../App.css";
@@ -22,7 +23,7 @@ const initState = {
 
 const ListComponent = () => {
   const { exceptionHandle, loginState } = useCustomLogin();
-  const { page, size } = useCustomMove();
+  const { page, size, moveToQnaList } = useCustomMove();
   const navigate = useNavigate();
   const [serverData, setServerData] = useState(initState);
 
@@ -175,6 +176,7 @@ const ListComponent = () => {
           )}
         </div>
       </div>
+      <PageComponent serverData={serverData} moveToList={moveToQnaList} />
     </section>
   );
 };
