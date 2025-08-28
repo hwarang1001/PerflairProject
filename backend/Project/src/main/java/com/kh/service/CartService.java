@@ -12,7 +12,7 @@ public interface CartService {
     List<CartItemListDTO> getCartItems(String userId);
 
     /** 장바구니에 상품 추가 */
-    void addItem(CartItemDTO dto, String userId);
+    Long addItem(CartItemDTO dto, String userId);
 
     /** 장바구니 아이템 삭제 */
     void removeItems(List<Long> cinos);

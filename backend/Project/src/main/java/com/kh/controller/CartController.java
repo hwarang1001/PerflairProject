@@ -38,10 +38,10 @@ public class CartController {
 
 	/** 장바구니 상품 추가 */
 	@PostMapping("/")
-	public ResponseEntity<String> addCart(@RequestBody CartItemDTO dto) {
-		String userId = getCurrentUserId();
-		cartService.addItem(dto, userId);
-		return ResponseEntity.ok("장바구니에 추가되었습니다.");
+	public ResponseEntity<Long> addCart(@RequestBody CartItemDTO dto) {
+	    String userId = getCurrentUserId();
+	    Long cino = cartService.addItem(dto, userId);
+	    return ResponseEntity.ok(cino); // ✅ 프론트에 cino 리턴
 	}
 
 	/** 장바구니 아이템 삭제 */

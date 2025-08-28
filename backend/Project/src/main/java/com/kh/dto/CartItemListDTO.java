@@ -17,7 +17,7 @@ public class CartItemListDTO {
 	private int price; // 옵션 가격
 	private int perfumeVol; // 옵션 용량
 	private String imageFile; // 이미지 파일 경로
-
+	
 	public CartItemListDTO(Long cino, int qty, Long productOptionId, String pname, int price, String imageFile) {
 		this.cino = cino;
 		this.qty = qty;
