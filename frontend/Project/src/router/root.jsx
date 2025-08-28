@@ -44,6 +44,11 @@ const AdminPage = lazy(() => import("../page/member/AdminPage.jsx"));
 // review
 const ReviewListPage = lazy(() => import("../page/review/ListPage.jsx"));
 const ReviewReadPage = lazy(() => import("../page/review/ReadPage.jsx"));
+// kakaoredierct
+const KakaoRedirect = lazy(() =>
+  import("../page/member/KakaoRedirectPage.jsx")
+);
+const KakaoModify = lazy(() => import("../page/member/ModifyPage.jsx"));
 
 const root = createBrowserRouter([
   {
@@ -243,6 +248,23 @@ const root = createBrowserRouter([
     element: (
       <Suspense fallback={<Loading />}>
         <ReviewReadPage />
+      </Suspense>
+    ),
+  },
+  // kakao
+  {
+    path: "/member/kakao",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <KakaoRedirect />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/member/modify",
+    element: (
+      <Suspense fallback={Loading}>
+        <KakaoModify />
       </Suspense>
     ),
   },

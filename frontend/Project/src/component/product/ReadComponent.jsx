@@ -281,7 +281,7 @@ const ReadComponent = ({ pno }) => {
       <section className="py-5 bg-light">
         <div className="container px-4 px-lg-5">
           <h2 className="fw-bolder mb-4 text-center">리뷰</h2>
-          {review.dtoList.length === 0 ? (
+          {(review.dtoList || []).length === 0 ? (
             <div className="text-center">
               <p>등록된 리뷰가 없습니다.</p>
             </div>
