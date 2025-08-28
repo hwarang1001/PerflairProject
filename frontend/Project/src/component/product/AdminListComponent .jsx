@@ -1,6 +1,7 @@
 import { API_SERVER_HOST, deleteRemove, getList } from "../../api/productApi";
 import { useEffect, useState } from "react";
 import useCustomMove from "../../hook/useCustomMove";
+import PageComponent from "../common/PageComponent";
 
 const host = API_SERVER_HOST;
 
@@ -18,7 +19,8 @@ const initState = {
 };
 
 const AdminListComponent = () => {
-  const { page, size, moveToAdd, moveToModify } = useCustomMove();
+  const { page, size, moveToAdd, moveToModify, moveToAdminProductList } =
+    useCustomMove();
   const [serverData, setServerData] = useState(initState);
   useEffect(() => {
     getList({ page, size }).then((data) => {
@@ -118,6 +120,10 @@ const AdminListComponent = () => {
           )}
         </div>
       </div>
+      <PageComponent
+        serverData={serverData}
+        moveToList={moveToAdminProductList}
+      />
     </section>
   );
 };
