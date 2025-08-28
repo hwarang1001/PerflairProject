@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "./LoginComponent.css";
 import { useDispatch } from "react-redux";
 import { loginPostAsync } from "../../slice/LoginSlice";
+import KakaoLoginComponent from "../member/KakaoLoginComponent";
 import { useNavigate } from "react-router-dom";
 const LoginComponent = () => {
   const [id, setId] = useState("");
@@ -68,9 +69,7 @@ const LoginComponent = () => {
         </form>
 
         {/* 카카오 로그인 버튼 (기능은 추후 구현) */}
-        <button onClick={handleKakaoLogin} className="kakao-login-button">
-          카카오로 로그인
-        </button>
+        <KakaoLoginComponent />
 
         {/* 로그인 메시지 */}
         {message && (

@@ -40,6 +40,10 @@ export const changePassword = async (
   );
   return res.data;
 };
+export const modifyMember = async (member) => {
+  const res = await jwtAxios.put(`${prefix}/social/modify`, member);
+  return res.data;
+};
 
 export const registerPost = async (data) => {
   const res = await axios.post(`${prefix}/signup`, data);
