@@ -1,12 +1,17 @@
 package com.kh.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.dto.PaymentHistoryDTO;
 import com.kh.dto.PaymentRequestDTO;
 import com.kh.service.PaymentService;
 
@@ -36,4 +41,12 @@ public class PaymentController {
 			return new ResponseEntity<>("Payment failed.", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	// ✅ 추가: 결제 내역 조회 API
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<List<PaymentHistoryDTO>> getPaymentHistory(@PathVariable String userId) {
+        log.info("Payment history request received for user: {}", userId);
+        List<PaymentHistoryDTO> history = paymentService.getPaymentHistory(userId);
+        return ResponseEntity.ok(history);
+    }
 }
