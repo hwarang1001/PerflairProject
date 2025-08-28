@@ -1,8 +1,8 @@
 import Header from "../../include/Header";
-import Footer from "../../include/Footer";
 import PaymentComponent from "../../component/payment/PaymentComponent.jsx";
+import Footer from "../../include/Footer";
 
-export default function PaymentPage() {
+const PaymentPage = () => {
   return (
     <>
       <Header />
@@ -10,4 +10,5 @@ export default function PaymentPage() {
       <Footer />
     </>
   );
-}
+};
+export default PaymentPage;

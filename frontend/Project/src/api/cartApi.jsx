@@ -1,4 +1,3 @@
-import axios from "axios";
 import jwtAxios from "../util/jwtUtil";
 
 export const API_SERVER_HOST = "http://localhost:8080";
@@ -24,9 +23,7 @@ export const updateItemQty = async (cino, qty) => {
   return res.data;
 };
 
-export const patchQuantity = async (id, quantity) =>
-  (await axios.patch(`${prefix}/${id}`, { quantity })).data;
-
+// 장바구니 선택 삭제
 export const deleteSelected = async (cinos) => {
   const res = await jwtAxios.delete(`${prefix}/`, { data: cinos });
   return res.data;

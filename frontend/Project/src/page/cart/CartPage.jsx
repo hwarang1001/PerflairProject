@@ -1,5 +1,5 @@
-import CartComponent from "../../component/cart/CartComponent.jsx";
 import Header from "../../include/Header";
+import CartComponent from "../../component/cart/CartComponent.jsx";
 import Footer from "../../include/Footer";
 
 const CartPage = () => {

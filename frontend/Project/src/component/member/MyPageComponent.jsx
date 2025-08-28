@@ -5,10 +5,10 @@ import ProfileComponent from "./ProfileComponent";
 import AddressComponent from "./AddressComponent";
 import OrderComponent from "./OrderComponent";
 import "./MyPageComponent.css";
+import { useNavigate } from "react-router-dom";
 
 export default function MyPage() {
   const loginState = useSelector((s) => s.login);
-
   const fallbackName =
     loginState?.name ||
     loginState?.realName ||
@@ -17,12 +17,18 @@ export default function MyPage() {
     "회원";
 
   const [me, setMe] = useState({ realName: fallbackName, email: "" });
-
+  const navigate = useNavigate();
   const [openProfile, setOpenProfile] = useState(false);
   const [openSecurity, setOpenSecurity] = useState(false);
   const [openAddress, setOpenAddress] = useState(false);
   const [openOrders, setOpenOrders] = useState(false);
-
+  const isLoggedIn = Boolean(loginState?.userId);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
   const loadMe = useCallback(async () => {
     try {
       const d = await getMyProfile();
