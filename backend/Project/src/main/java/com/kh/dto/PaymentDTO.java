@@ -14,6 +14,7 @@ public class PaymentDTO {
 	private Long paymentId;
 	private String payStatus;
 	private Long totalAmount;
-	 private LocalDate paymentDate;
+	private LocalDate paymentDate;
 	private List<PaymentDetailDTO> details; // PaymentDetail DTO 리스트
+	private AddressDTO shippingAddress;
 }

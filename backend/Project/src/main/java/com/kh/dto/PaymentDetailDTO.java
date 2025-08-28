@@ -9,7 +9,11 @@ import lombok.Setter;
 @Builder
 public class PaymentDetailDTO {
 	private Long productOptionId;
+	private Long pno;
+	private String brand;
 	private String pname;
+	private int perfumeVol;
+	private String imageFile;
 	private int qty;
-	private Long price;
+	private int price;
 }

@@ -37,8 +37,10 @@ public class CartServiceImpl implements CartService {
 		return cartItemRepository.getItemsOfCartDTOByEmail(userId);
 	}
 
-	/** 장바구니에 상품 추가 */
-	public void addItem(CartItemDTO dto, String userId) {
+	/** 장바구니에 상품 추가 
+	 * @return */
+	@Transactional
+	public Long addItem(CartItemDTO dto, String userId) {
 		// 1. 유저용 Cart 가져오기 (없으면 생성)
 		Cart cart = cartRepository.findByOwnerUserId(userId).orElseGet(() -> createCartForUser(userId));
 
@@ -57,11 +59,15 @@ public class CartServiceImpl implements CartService {
 			// existing.get()을 사용하여 Optional에서 CartItem 객체를 가져옴
 			CartItem item = existing.get();
 			item.changeQty(item.getQty() + dto.getQty());
+			cartItemRepository.save(item);
+			return item.getCino();
 		} else {
 			// 기존 아이템이 없으면 새로운 아이템을 장바구니에 추가
 			CartItem item = CartItem.builder().cart(cart).productOption(option).qty(dto.getQty())
 					.pno(option.getProduct().getPno()).build();
 			cart.addCartItem(item);
+			cartItemRepository.save(item);
+			return item.getCino();
 		}
 	}
 
