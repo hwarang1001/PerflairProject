@@ -1,5 +1,5 @@
 // src/component/mypage/AddressComponent.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import DaumPostcode from "react-daum-postcode";
 import "./AddressComponent.css";
 import {
@@ -12,10 +12,10 @@ import {
 
 const emptyForm = {
   receiverName: "",
-  phone: "", // ← 서버로 보낼 최종 문자열(조합해서 넣음)
-  phone1: "", // ← UI 전용
-  phone2: "", // ← UI 전용
-  phone3: "", // ← UI 전용
+  phone: "", // 서버로 보낼 최종 문자열
+  phone1: "", // UI용
+  phone2: "", // UI용
+  phone3: "", // UI용
   zonecode: "",
   address: "",
   detailAddress: "",
@@ -39,11 +39,7 @@ function splitPhoneParts(raw) {
     .slice(0, 11);
   if (d.length <= 3) return { p1: d, p2: "", p3: "" };
   if (d.length <= 7) return { p1: d.slice(0, 3), p2: d.slice(3), p3: "" };
-  return {
-    p1: d.slice(0, 3),
-    p2: d.slice(3, 7),
-    p3: d.slice(7, 11),
-  };
+  return { p1: d.slice(0, 3), p2: d.slice(3, 7), p3: d.slice(7, 11) };
 }
 
 export default function AddressComponent({ onSaved }) {
@@ -55,14 +51,36 @@ export default function AddressComponent({ onSaved }) {
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
 
-  // 프리셋 선택 상태("__CUSTOM__"이면 직접입력)
+  // 프리셋 선택 상태("CUSTOM"이면 직접입력)
   const [memoSelect, setMemoSelect] = useState("");
 
-  // 전화 입력칸 자동 포커스 이동용 ref
+
+  // ====== PaymentComponent 스타일 배송 메모 상태 ======
+  // none | door | guard | custom
+  const [reqType, setReqType] = useState("none");
+  const [reqText, setReqText] = useState("");
+  const [doorPw, setDoorPw] = useState("");
+
+  // 미리보기/저장용 최종 문자열 (PaymentComponent와 동일 규칙)
+  const requestMemo = useMemo(() => {
+    if (reqType === "door" && doorPw.trim())
+      return `문 앞에 놓아주세요 (공동현관 비밀번호: ${doorPw.trim()})`;
+    if (reqType === "custom" && reqText.trim()) return reqText.trim();
+    if (reqType === "guard") return "경비실에 맡겨주세요";
+    return "요청사항 없음";
+  }, [reqType, reqText, doorPw]);
+
+  // requestMemo 변경 시 form.memo 자동 동기화
+  useEffect(() => {
+    setForm((f) => ({ ...f, memo: requestMemo }));
+  }, [requestMemo]);
+
+  // 전화 입력칸 자동 포커스 이동
   const phone1Ref = useRef(null);
   const phone2Ref = useRef(null);
   const phone3Ref = useRef(null);
 
+  // 최초 로드: 순서 유지(정렬 안 함)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -245,7 +263,7 @@ export default function AddressComponent({ onSaved }) {
     }
   };
 
-  // 삭제 — 1개일 땐 버튼을 렌더링하지 않으므로 일반적으론 호출 X
+  // 삭제 — 1개일 땐 버튼 아예 렌더 X (일반적으로 호출 안됨)
   const onDelete = async (id) => {
     if (list.length <= 1) {
       alert("배송지는 최소 1개 이상 유지해야 합니다.");
@@ -259,6 +277,7 @@ export default function AddressComponent({ onSaved }) {
       await removeAddress(id);
       let next = list.filter((a) => a.id !== id); // 순서 유지
 
+      // 기본을 지웠다면 남은 첫 항목을 기본으로 지정
       if (target?.isDefault && next.length > 0) {
         const newDef = next[0].id;
         try {
@@ -354,7 +373,6 @@ export default function AddressComponent({ onSaved }) {
 
   const onMouseMove = (e) => {
     if (!draggingRef.current) return;
-
     const { dx, dy } = offsetRef.current;
     const nextX = e.clientX - dx;
     const nextY = e.clientY - dy;
@@ -563,46 +581,50 @@ export default function AddressComponent({ onSaved }) {
               />
             </div>
 
-            {/* 배송 메모: 프리셋 + 기타(직접입력) */}
+            {/* === 배송 메모: PaymentComponent 스타일 라디오 + 입력 === */}
             <div className="col-12">
-              <label className="form-label">배송 메모(선택)</label>
-              <div className="d-flex gap-2">
-                <select
-                  className="form-select"
-                  value={
-                    memoSelect ||
-                    (form.memo
-                      ? MEMO_PRESETS.includes(form.memo)
-                        ? form.memo
-                        : "__CUSTOM__"
-                      : "")
-                  }
-                  onChange={onChangeMemoPreset}
-                  disabled={loading}
-                  style={{ maxWidth: 240 }}
-                >
-                  <option value="">선택 안 함</option>
-                  {MEMO_PRESETS.map((opt) => (
-                    <option value={opt} key={opt}>
-                      {opt}
-                    </option>
+              <label className="form-label">배송 요청사항</label>
+              <div className="border rounded-3 p-3">
+                <div className="vstack gap-2">
+                  {[
+                    { key: "none", label: "요청사항 없음" },
+                    { key: "door", label: "문 앞에 놓아주세요" },
+                    { key: "guard", label: "경비실에 맡겨주세요" },
+                    { key: "custom", label: "직접 입력" },
+                  ].map((opt) => (
+                    <label key={opt.key} className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        name="req"
+                        checked={reqType === opt.key}
+                        onChange={() => setReqType(opt.key)}
+                      />
+                      <span className="form-check-label ms-1">{opt.label}</span>
+                    </label>
                   ))}
-                  <option value="__CUSTOM__">기타(직접 입력)</option>
-                </select>
-
-                {(memoSelect === "__CUSTOM__" ||
-                  (!memoSelect &&
-                    form.memo &&
-                    !MEMO_PRESETS.includes(form.memo))) && (
-                  <input
-                    className="form-control"
-                    name="memo"
-                    value={form.memo}
-                    onChange={onChange}
-                    placeholder="예: 부재 시 관리사무소에 맡겨주세요"
-                    disabled={loading}
-                  />
-                )}
+                  {reqType === "custom" && (
+                    <input
+                      className="form-control"
+                      placeholder="요청사항을 입력하세요"
+                      value={reqText}
+                      onChange={(e) => setReqText(e.target.value)}
+                      disabled={loading}
+                    />
+                  )}
+                  {reqType === "door" && (
+                    <input
+                      className="form-control"
+                      placeholder="공동현관 비밀번호(선택)"
+                      value={doorPw}
+                      onChange={(e) => setDoorPw(e.target.value)}
+                      disabled={loading}
+                    />
+                  )}
+                </div>
+                <div className="text-muted small mt-2">
+                  요청 메모 미리보기: {requestMemo}
+                </div>
               </div>
             </div>
 
@@ -631,6 +653,9 @@ export default function AddressComponent({ onSaved }) {
                   setEditingId(null);
                   setForm(emptyForm);
                   setMemoSelect("");
+                  setReqType("none");
+                  setReqText("");
+                  setDoorPw("");
                 }}
                 disabled={loading}
               >
