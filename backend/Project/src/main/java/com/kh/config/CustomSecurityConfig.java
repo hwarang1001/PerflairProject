@@ -27,7 +27,7 @@ import lombok.extern.log4j.Log4j2;
 @Configuration
 @Log4j2
 @RequiredArgsConstructor
-@EnableWebSecurity // 👈 WebSecurity 설정을 활성화합니다.
+@EnableWebSecurity 
 @EnableMethodSecurity
 public class CustomSecurityConfig {
 
@@ -46,27 +46,37 @@ public class CustomSecurityConfig {
 	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http, JWTCheckFilter jwtCheckFilter) throws Exception {
-		log.info("-------------------- security config ---------------------------------------");
+    public SecurityFilterChain filterChain(HttpSecurity http, JWTCheckFilter jwtCheckFilter) throws Exception {
+        log.info("-------------------- security config ---------------------------------------");
 
-		http.csrf(config -> config.disable())
-				.sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.cors(config -> config.configurationSource(corsConfigurationSource()))
-				// 💡 formLogin() 설정을 유지하고, 성공/실패 핸들러를 지정합니다.
-				.formLogin(config -> {
-					config.loginPage("/api/member/login");
-					config.successHandler(new APILoginSuccessHandler());
-				}).authorizeHttpRequests(config -> {
-					config.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/member/login",
-							"/api/member/signup", "/api/login/**", "/api/notice/**", "/api/member/check-id",
-							"/api/member/find-id", "/api/member/password-reset/**").permitAll()
-							.requestMatchers("/api/member/me").authenticated().anyRequest().permitAll();
-				})
-				// JWTCheckFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
-				.addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class);
+        http.csrf(config -> config.disable())
+                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(config -> config.configurationSource(corsConfigurationSource()))
+                // 💡 formLogin() 설정을 유지하고, 성공/실패 핸들러를 지정합니다.
+                .formLogin(config -> {
+                    config.loginPage("/api/member/login");
+                    config.successHandler(new APILoginSuccessHandler());
+                }).authorizeHttpRequests(config -> {
+                    // 모든 사용자에게 허용되는 경로
+                    config.requestMatchers("/api/product/view/**","/api/member/login","/api/member/signup",
+                    		"/api/reviews/**","/api/product/read/{pno}","/api/product/list","/api/notice/**",
+                    		"/api/member/check-id", "/api/member/find-id", "/api/member/password-reset/**"
+                    		).permitAll();
 
-		return http.build();
-	}
+                    // 인증된 사용자만 접근 가능한 경로(장바구니, 결제, 내정보, 질의응답)
+                    config.requestMatchers("/api/cart/", "/api/payment/**", "/api/member/me", "/api/qna/").authenticated();
+
+                    // 관리자 역할만 접근 가능한 경로(상품관리 목록, 추가, 삭제, 수정)
+                    config.requestMatchers("/api/product/admin/list","/api/product/**").hasRole("ADMIN");
+
+                    // 그 외 모든 요청은 인증 필요
+                    config.anyRequest().authenticated();
+                })
+                // JWTCheckFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
+                .addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
