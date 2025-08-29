@@ -2,10 +2,10 @@ package com.kh.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,14 +57,21 @@ public class ProductController {
 		return fileUtil.getFile(fileName);
 	}
 
-//	@PreAuthorize("hasRole('ROLE_ADMIN')") 
-	@GetMapping("/list")
-	public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
-		log.info("list............." + pageRequestDTO);
-		return productService.list(pageRequestDTO);
-	}
+	// 일반 사용자가 볼 수 있는 상품 리스트
+    @GetMapping("/list")
+    public PageResponseDTO<ProductDTO> list(PageRequestDTO pageRequestDTO) {
+        log.info("list............." + pageRequestDTO);
+        return productService.list(pageRequestDTO);
+    }
 
-	@GetMapping("/{pno}")
+    // 관리자만 접근할 수 있는 상품 관리 리스트
+    @GetMapping("/admin/list")
+    public PageResponseDTO<ProductDTO> adminList(PageRequestDTO pageRequestDTO) {
+        log.info("admin list............." + pageRequestDTO);
+        return productService.list(pageRequestDTO);
+    }
+    
+	@GetMapping("/read/{pno}")
 	public ProductDTO read(@PathVariable(name = "pno") Long pno) {
 		return productService.get(pno);
 	}

@@ -14,6 +14,7 @@ import com.kh.domain.MemberAddress;
 import com.kh.domain.Payment;
 import com.kh.domain.PaymentDetail;
 import com.kh.domain.Product;
+import com.kh.domain.ProductOption;
 import com.kh.dto.PaymentDetailDTO;
 import com.kh.dto.PaymentHistoryDTO;
 import com.kh.dto.PaymentRequestDTO;
@@ -21,6 +22,7 @@ import com.kh.repository.CartItemRepository;
 import com.kh.repository.MemberAddressRepository;
 import com.kh.repository.PaymentDetailRepository;
 import com.kh.repository.PaymentRepository;
+import com.kh.repository.ProductOptionRepository;
 import com.kh.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
 	private final ProductRepository productRepository;
 	private final CartItemRepository cartItemRepository;
 	private final MemberAddressRepository memberAddressRepository;
-
+	private final ProductOptionRepository productOptionRepository;
 	@Override
 	@Transactional
 	public Long completePayment(PaymentRequestDTO requestDTO) {
@@ -90,9 +92,12 @@ public class PaymentServiceImpl implements PaymentService {
 					.pno(cartItem.getProductOption().getProduct().getPno()).build();
 			paymentDetailRepository.save(paymentDetail);
 
-//			 //7. 재고 감소 (실제 비즈니스 로직에 맞게 구현)
-//			 productOption.removeStock(cartItem.getQty());
-//			 productRepository.save(product);
+			ProductOption productOption = cartItem.getProductOption();
+            if (productOption.getStock() < cartItem.getQty()) {
+                throw new IllegalArgumentException("Not enough stock for product option " + productOption.getOid());
+            }
+            productOption.removeStock(cartItem.getQty());
+            productOptionRepository.save(productOption);
 		}
 
 		// 8. 장바구니 비우기
