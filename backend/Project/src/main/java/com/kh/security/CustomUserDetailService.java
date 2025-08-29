@@ -32,7 +32,7 @@ public class CustomUserDetailService implements UserDetailsService {
 		if (member == null) {
 			throw new UsernameNotFoundException("Not Found");
 		}
-		MemberDTO memberDTO = new MemberDTO(member.getUserId(), member.getPw(), member.getName(), member.getAddress(),
+		MemberDTO memberDTO = new MemberDTO(member.getUserId(), member.getPw(), member.getName(),
 				member.getPhoneNum(), member.isSocial(),
 				member.getMemberRoleList().stream().map(memberRole -> memberRole.name()).collect(Collectors.toList()));
 		log.info(memberDTO);

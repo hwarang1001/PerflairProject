@@ -1,6 +1,6 @@
 package com.kh.controller;
 
-
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.dto.AddressDTO;
 import com.kh.dto.MemberDTO;
 import com.kh.dto.MemberModifyDTO;
 import com.kh.dto.MemberSignupDTO;
+import com.kh.dto.PasswordModifyDTO;
 import com.kh.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +32,6 @@ import lombok.extern.log4j.Log4j2;
 public class MemberController {
 
 	private final MemberService memberService;
-	
-	
 
 	// 회원 수정
 	@PutMapping("/modify")
@@ -64,7 +64,6 @@ public class MemberController {
 		return null; // 또는 적절한 예외 처리
 	}
 
-
 	// 회원 가입
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody MemberSignupDTO signupDTO) {
@@ -84,6 +83,25 @@ public class MemberController {
 			return ResponseEntity.ok("회원이 성공적으로 삭제되었습니다.");
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("회원 삭제에 실패했습니다: " + e.getMessage());
+		}
+	}
+
+	@GetMapping("/check-id")
+	public ResponseEntity<?> checkId(@RequestParam String userId) {
+		boolean exists = memberService.isUserIdExists(userId);
+		return ResponseEntity.ok(Map.of("available", !exists));
+	}
+
+	// 비밀번호 수정 ( 현재 비밀번호 확인 후 새로운 비밀번호로 수정 )
+	@PutMapping("/me/password")
+	public ResponseEntity<String> modifyPassword(@RequestParam String userId,
+			@RequestBody PasswordModifyDTO passwordModifyDTO) {
+		log.info(passwordModifyDTO);
+		try {
+			memberService.modifyPassword(userId, passwordModifyDTO);
+			return ResponseEntity.ok("비밀번호가 성공적으로 수정되었습니다.");
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("비밀번호 수정에 실패했습니다: " + e.getMessage());
 		}
 	}
 }

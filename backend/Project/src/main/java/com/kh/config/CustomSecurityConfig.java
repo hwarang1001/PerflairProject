@@ -58,8 +58,9 @@ public class CustomSecurityConfig {
 					config.successHandler(new APILoginSuccessHandler());
 				}).authorizeHttpRequests(config -> {
 					config.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api/member/login",
-							"/api/member/signup", "/api/notice/**").permitAll().requestMatchers("/api/member/me")
-							.authenticated().anyRequest().permitAll();
+							"/api/member/signup", "/api/login/**", "/api/notice/**", "/api/member/check-id",
+							"/api/member/find-id", "/api/member/password-reset/**").permitAll()
+							.requestMatchers("/api/member/me").authenticated().anyRequest().permitAll();
 				})
 				// JWTCheckFilter를 UsernamePasswordAuthenticationFilter 이전에 추가
 				.addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class);
