@@ -1,0 +1,52 @@
+/* ===== 로그인/회원가입과 동일한 레이아웃/간격 ===== */
+/* 헤더/푸터 사이에서 '남은 공간만' 차지 + 가운데 정렬 */
+.auth-center {
+  flex: 1; /* Register/Login처럼 남은 세로 공간 차지 */
+  display: flex;
+  align-items: center; /* 수직 가운데 */
+  justify-content: center; /* 수평 가운데 */
+  padding: 40px 0; /* 위·아래 여백 동일 */
+  box-sizing: border-box;
+  background: #ffffff; /* 배경 통일 */
+  overflow: auto; /* 내용 많을 때 스크롤 */
+}
+
+/* 박스(카드) 스타일을 Register/Login 박스와 동일하게 */
+.auth-center > .container {
+  background-color: #ffffff;
+  padding: 40px 55px; /* 내부 여백 동일 */
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px; /* 폭 동일 */
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* 제목(아이디 찾기 / 비밀번호 재설정)도 동일 톤 & 크기 */
+.auth-center h2 {
+  margin-top: 15px;
+  margin-bottom: 50px;
+  font-size: 24px; /* 로그인/회원가입 제목과 동일 */
+  color: #5c4b3b;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 폼 간격도 로그인/회원가입 느낌 유지 */
+.auth-center .myhub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 반응형: 작은 화면일 때 패딩/폰트 축소 (Register와 동일 톤) */
+@media (max-width: 480px) {
+  .auth-center > .container {
+    padding: 24px 16px;
+  }
+  .auth-center h2 {
+    font-size: 20px;
+    margin-bottom: 32px;
+  }
+}

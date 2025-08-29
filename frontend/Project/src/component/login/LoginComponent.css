@@ -1,14 +1,14 @@
 /* 컨테이너: 화면 중앙 정렬 및 배경 */
 .login-container {
   background-color: white;
-  flex: 1; /* ✅ 메인 콘텐츠 영역이 남은 공간 차지 */
+  flex: 1; /* 메인 콘텐츠 영역이 남은 공간 차지 */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: "Noto Sans KR", sans-serif;
-  padding: 40px 0; /* ✅ 위아래 여유 공간 */
+  padding: 40px 0; /* 위아래 여유 공간 */
   box-sizing: border-box;
-  overflow: auto; /* ✅ 콘텐츠가 커질 경우 스크롤 */
+  overflow: auto; /* 콘텐츠가 커질 경우 스크롤 */
 }
 
 /* 로그인 박스 */

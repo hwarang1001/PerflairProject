@@ -5,13 +5,19 @@ import { createAnswer, updateAnswer } from "../../api/answerApi";
 import { useSelector } from "react-redux";
 import "./ReadComponent.css";
 
+/*
+  Q&A 상세 화면
+  - 목적 -> 질문 제목/내용 표시, 답변 조회/등록/수정, 삭제
+  - 권한 -> ADMIN이면 답변 등록/수정 가능, 작성자이면 미답변일 때 수정/삭제 버튼 노출
+  - id 소스 -> props.id 우선, 없으면 URL 파라미터(id)
+*/
 const initState = {
   title: "",
   content: "",
   userId: "",
-  // 답변 표시/수정용
+  // 답변 표시/수정용 필드
   answer: "",
-  answerId: null, // 수정 시 필요
+  answerId: null, // 답변 수정 시 필요
   answeredAt: "",
   answeredBy: "",
   createdAt: "",
@@ -19,38 +25,45 @@ const initState = {
 
 const ReadComponent = ({ id }) => {
   const navigate = useNavigate();
+
+  // 로그인 정보에서 권한/사용자 아이디 읽기
   const loginInfo = useSelector((state) => state.login);
   const isAdmin = loginInfo?.roleNames?.includes("ADMIN");
   const userId = loginInfo?.userId;
 
-  // URL 파라미터와 props 둘 다 대응
+  // URL 파라미터와 props 둘 다 대응 -> props.id가 있으면 우선 사용
   const { id: idParam } = useParams();
   const qnaId = id ?? idParam;
 
-  const [qna, setQna] = useState(initState);
-  const [isAnswering, setIsAnswering] = useState(false);
-  const [answerText, setAnswerText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  // 화면 상태
+  const [qna, setQna] = useState(initState); // 질문/답변 데이터 묶음
+  const [isAnswering, setIsAnswering] = useState(false); // 답변 입력 폼 토글
+  const [answerText, setAnswerText] = useState(""); // 답변 입력값
+  const [loading, setLoading] = useState(false); // 상세 불러오는 중
+  const [saving, setSaving] = useState(false); // 답변 저장 중
 
+  // 상세 조회 -> 서버 응답 모양이 달라도 안전하게 매핑
   const fetchQna = async () => {
     if (!qnaId) return;
     setLoading(true);
     try {
       const data = await getQna(qnaId);
 
-      // 서버 응답 형태에 방어적으로 매핑
+      // 답변 객체 후보 -> answerObj 우선, 없으면 answer가 객체일 때 사용
       const ansObj =
         data?.answerObj ??
         (typeof data?.answer === "object" ? data.answer : null);
 
+      // 답변 본문 -> answer가 문자열이면 그대로, 아니면 ansObj.content
       const answerText =
         (typeof data?.answer === "string" && data.answer) ||
         ansObj?.content ||
         "";
 
+      // 답변 식별자 -> answerId 우선, 없으면 ansObj의 id/answerId
       const answerId = data?.answerId ?? ansObj?.answerId ?? ansObj?.id ?? null;
 
+      // 답변 메타 -> 시간/작성자
       const answeredAt = data?.answeredAt ?? ansObj?.createdAt ?? "";
       const answeredBy =
         data?.answeredBy ?? ansObj?.adminId ?? ansObj?.userId ?? "";
@@ -73,22 +86,24 @@ const ReadComponent = ({ id }) => {
     }
   };
 
+  // 화면 진입/아이디 변경 시 상세 재조회
   useEffect(() => {
     fetchQna();
   }, [qnaId]);
 
+  // 작성자 여부
   const isAuthor = qna?.userId === userId;
 
-  // ✅ 답변 존재 여부 (있으면 true)
+  // 답변 존재 여부 -> 본문/answerId/answeredAt 중 하나만 있어도 true
   const hasAnswer = Boolean(
     (qna.answer && qna.answer.trim()) || qna.answerId || qna.answeredAt
   );
 
-  // 답변 등록/수정 (서버 컨트롤러 규약: content 키 사용)
-  // 
+  // 답변 등록/수정 제출
+  // - 서버 규약 -> 본문 키는 content
+  // - 기존 답변이 있으면 수정, 없으면 등록
   const handleAnswerSubmit = async () => {
     const body = answerText.trim();
-    
     if (!body) {
       alert("답변 내용을 입력해주세요.");
       return;
@@ -97,21 +112,24 @@ const ReadComponent = ({ id }) => {
     setSaving(true);
     try {
       if (qna.answer?.trim()) {
-        // 수정
+        // 수정 플로우
         if (!qna.answerId) {
           alert(
             "answerId가 없습니다. 단건 조회 응답에 answerId를 포함해 주세요."
           );
         } else {
-          await updateAnswer(qna.answerId, { content: body }); // PUT /api/answers/{answerId}
+          // PUT /api/answers/{answerId}
+          await updateAnswer(qna.answerId, { content: body });
           alert("답변이 수정되었습니다.");
         }
       } else {
-        // 등록
-        await createAnswer({ questionId: qnaId, content: body }); // POST /api/answers/
+        // 등록 플로우
+        // POST /api/answers/
+        await createAnswer({ questionId: qnaId, content: body });
         alert("답변이 등록되었습니다.");
       }
 
+      // 저장 후 최신 데이터로 새로 반영
       await fetchQna();
       setIsAnswering(false);
       setAnswerText("");
@@ -127,6 +145,7 @@ const ReadComponent = ({ id }) => {
     }
   };
 
+  // 질문 삭제 -> 확인창 후 진행, 완료 시 목록으로
   const handleDelete = async () => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
@@ -142,26 +161,31 @@ const ReadComponent = ({ id }) => {
   return (
     <section className="py-5">
       <div className="container px-4 px-lg-5">
+        {/* 상단 타이틀/구분선 */}
         <div className="mb-5 text-center">
           <h1 className="mb-5">Q&A</h1>
           <hr />
         </div>
 
         <div className="qna-container mt-5">
+          {/* 로딩 표시 */}
           {loading ? (
             <div className="text-center py-5">불러오는 중...</div>
           ) : (
             <>
+              {/* 질문 본문 */}
               <h2>{qna.title}</h2>
               <p className="qna-date">작성일: {qna.createdAt}</p>
               <div className="qna-content-slot">
                 <p className="qna-content">{qna.content}</p>
               </div>
 
+              {/* 답변 영역 */}
               {qna.answer ? (
                 <div className="qna-answer-box">
                   <h5>답변</h5>
 
+                  {/* 관리자 -> 수정 모드일 때 textarea 노출 */}
                   {isAdmin && isAnswering ? (
                     <>
                       <textarea
@@ -193,10 +217,11 @@ const ReadComponent = ({ id }) => {
                       </div>
                     </>
                   ) : (
+                    // 일반 보기 모드
                     <>
                       <p>{qna.answer}</p>
 
-                      {/* 메타 + 수정 버튼 한 줄 정렬 */}
+                      {/* 답변 메타 + (관리자) 수정 버튼 */}
                       <div className="qna-answer-meta-row swap">
                         <p className="qna-answer-meta">
                           {qna.answeredAt} | 답변자: {qna.answeredBy}
@@ -217,8 +242,10 @@ const ReadComponent = ({ id }) => {
                   )}
                 </div>
               ) : (
+                // 아직 답변 없음
                 <>
                   {isAdmin ? (
+                    // 관리자에게는 클릭해서 바로 입력 가능
                     !isAnswering ? (
                       <div
                         className="qna-answer-empty"
@@ -271,6 +298,7 @@ const ReadComponent = ({ id }) => {
                 </>
               )}
 
+              {/* 하단 버튼 -> 목록으로, 수정/삭제(조건부) */}
               <div className="qna-button-row mt-5">
                 <div className="button-back-left">
                   <button
@@ -281,10 +309,11 @@ const ReadComponent = ({ id }) => {
                   </button>
                 </div>
 
-                {/* 오른쪽 버튼 그룹: 관리자 = 삭제 항상 표시, 수정은 작성자+미답변일 때만 */}
+                {/* 오른쪽 버튼
+                   - 관리자 -> 삭제 항상 노출
+                   - 작성자 -> 미답변일 때 수정/삭제 노출 */}
                 {(isAdmin || (isAuthor && !hasAnswer)) && (
                   <div className="button-group-right">
-                    {/* 수정: 작성자 & 미답변일 때만 */}
                     {isAuthor && !hasAnswer && (
                       <button
                         className="btn btn-outline-secondary"
@@ -294,7 +323,6 @@ const ReadComponent = ({ id }) => {
                       </button>
                     )}
 
-                    {/* 삭제: 관리자면 항상, 작성자는 미답변일 때만 */}
                     {(isAdmin || (isAuthor && !hasAnswer)) && (
                       <button
                         className="btn btn-outline-danger"
