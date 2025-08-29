@@ -1,4 +1,8 @@
-import { API_SERVER_HOST, deleteRemove, getList } from "../../api/productApi";
+import {
+  API_SERVER_HOST,
+  deleteRemove,
+  getAdminList,
+} from "../../api/productApi";
 import { useEffect, useState } from "react";
 import useCustomMove from "../../hook/useCustomMove";
 import PageComponent from "../common/PageComponent";
@@ -23,7 +27,7 @@ const AdminListComponent = () => {
     useCustomMove();
   const [serverData, setServerData] = useState(initState);
   useEffect(() => {
-    getList({ page, size }).then((data) => {
+    getAdminList({ page, size }).then((data) => {
       console.log(data);
       setServerData(data);
     });
@@ -40,7 +44,7 @@ const AdminListComponent = () => {
     await deleteRemove(product.pno);
 
     // 삭제 후 리스트를 다시 받음
-    const data = await getList({ page, size });
+    const data = await getAdminList({ page, size });
     setServerData(data);
   };
 

@@ -36,7 +36,7 @@ const ReadComponent = ({ pno }) => {
   const [product, setProduct] = useState(initState);
   const [review, setReview] = useState(reviewInitState);
   const { moveToPayment } = useCustomMove();
-  const { moveToPath } = useCustomLogin();
+  const { moveToPath, checkLogin } = useCustomLogin();
 
   const options = product.options || [];
 
@@ -106,6 +106,12 @@ const ReadComponent = ({ pno }) => {
   const handleAddToCart = async (e) => {
     e.preventDefault(); // 페이지 새로고침 방지
 
+    // 로그인 체크
+    if (!checkLogin()) {
+      alert("로그인이 필요한 서비스입니다."); // 로그인 알림
+      return; // 로그인되지 않으면 리디렉션하지 않음
+    }
+
     // 선택한 옵션
     const selectedOption = options[selectedIndex];
 
@@ -119,6 +125,7 @@ const ReadComponent = ({ pno }) => {
       // postAdd 함수 호출 (비동기 처리)
       await postAdd(data); // 데이터가 정상적으로 전송될 때까지 기다림
       alert("장바구니 등록 성공"); // 성공 메시지
+      moveToPath("/cart"); // 장바구니 페이지로 이동
     } catch (error) {
       alert("장바구니 등록 실패"); // 실패 메시지
       console.error("장바구니 등록 실패:", error); // 에러 콘솔에 출력
@@ -126,8 +133,16 @@ const ReadComponent = ({ pno }) => {
   };
 
   const handleBuyNow = async () => {
+    // 로그인 체크
+    if (!checkLogin()) {
+      alert("로그인이 필요한 서비스입니다."); // 로그인 알림
+      return;
+    }
+
+    // 선택한 옵션 가져오기
     const selectedOption = options[selectedIndex];
 
+    // 장바구니 데이터
     const data = {
       productOptionId: selectedOption.oid,
       qty: count,
@@ -140,6 +155,7 @@ const ReadComponent = ({ pno }) => {
         alert("상품 추가 실패: cino 없음");
         return;
       }
+      // 결제할 데이터
       const itemData = {
         cino: Number(cino),
         productOptionId: selectedOption.oid,
@@ -149,7 +165,6 @@ const ReadComponent = ({ pno }) => {
         qty: count,
         imageFile: product.uploadFileNames[0] || "",
       };
-
       moveToPayment("/payment", {
         state: {
           items: [itemData],

@@ -18,7 +18,7 @@ const prefix = `${API_SERVER_HOST}/api/qna`;
 */
 export const getQnaList = async (pageParam) => {
   const { page, size } = pageParam;
-  const res = await axios.get(`${prefix}/list`, {
+  const res = await jwtAxios.get(`${prefix}/list`, {
     params: { page, size },
   });
   return res.data;
@@ -31,7 +31,7 @@ export const getQnaList = async (pageParam) => {
   - 받음: { questionId, title, content, userId, createdAt, ... } 형태
 */
 export const getQna = async (id) => {
-  const res = await axios.get(`${prefix}/${id}`);
+  const res = await jwtAxios.get(`${prefix}/${id}`);
   return res.data;
 };
 

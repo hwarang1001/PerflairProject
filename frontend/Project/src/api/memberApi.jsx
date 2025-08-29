@@ -52,9 +52,9 @@ export const registerPost = async (data) => {
 
 /* 아이디/비번 찾기 (public) */
 export const checkUserId = async (userId) => {
-  const res = await axios.get(`${prefix}/check-id`, { params: userId });
+  const res = await axios.get(`${prefix}/check-id`, { params: { userId } });
   return res.data;
-}
+};
 // 1) 아이디 찾기: 이름 + 휴대폰으로 마스킹된 이메일 반환
 // 응답 예시: { maskedUserId: "gi**@mail.com" }
 export const findUserId = async ({ name, phoneNum }) => {

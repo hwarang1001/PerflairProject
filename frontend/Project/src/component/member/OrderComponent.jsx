@@ -3,7 +3,7 @@ import { paymentList } from "../../api/paymentApi";
 import { useSelector } from "react-redux";
 import { API_SERVER_HOST } from "../../api/cartApi";
 import { postReview } from "../../api/reviewApi";
-
+import useCustomLogin from "../../hook/useCustomLogin";
 const paymentInitState = {
   paymentId: 0,
   userId: "",
@@ -20,7 +20,7 @@ export default function OrderComponent() {
   const [loading, setLoading] = useState(false);
   const loginState = useSelector((s) => s.login);
   const userId = loginState.userId;
-
+  const { moveToPath } = useCustomLogin();
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [newReview, setNewReview] = useState({
@@ -104,6 +104,10 @@ export default function OrderComponent() {
     }
   };
 
+  // 이미지 클릭 핸들러
+  const onClickImage = (pno) => {
+    moveToPath(`/product/read/${pno}`);
+  };
   return (
     <div className="myhub-panel">
       {loading ? (
@@ -142,8 +146,14 @@ export default function OrderComponent() {
                           : "https://dummyimage.com/72x72/dee2e6/6c757d.jpg"
                       }
                       alt={it.pname}
+                      onClick={() => onClickImage(it.pno)}
                       className="rounded me-3"
-                      style={{ width: 72, height: 72, objectFit: "cover" }}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        objectFit: "cover",
+                        cursor: "pointer",
+                      }}
                     />
                     <div className="flex-grow-1">
                       <div className="fw-semibold mb-2">

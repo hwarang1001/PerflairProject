@@ -26,10 +26,8 @@ const QnaWritePage = lazy(() => import("../page/qna/WritePage"));
 // login
 const LoginPage = lazy(() => import("../page/login/LoginPage"));
 const RegisterPage = lazy(() => import("../page/login/RegisterPage"));
-// const FindIdPage = lazy(() => import("../page/login/FindIdPage"));
-// const FindPasswordPage = lazy(() =>
-//   import("../page/login/FindPasswordPage")
-// );
+const FindIdPage = lazy(() => import("../page/login/FindIdPage"));
+const FindPasswordPage = lazy(() => import("../page/login/FindPasswordPage"));
 
 // cart
 const CartPage = lazy(() => import("../page/cart/CartPage"));
@@ -183,23 +181,22 @@ const root = createBrowserRouter([
       </Suspense>
     ),
   },
-  // {
-  //   path: "/login/find-id",
-  //   element: (
-  //     <Suspense fallback={<Loading />}>
-  //       <FindIdPage />
-  //     </Suspense>
-  //   ),
-  // },
-  // {
-  //   path: "/login/find-password",
-  //   element: (
-  //     <Suspense fallback={<Loading />}>
-  //       <FindPasswordPage />
-  //     </Suspense>
-  //   ),
-  // },
-  // cart
+  {
+    path: "/login/find-id",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <FindIdPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/login/find-password",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <FindPasswordPage />
+      </Suspense>
+    ),
+  },
   {
     path: "/cart",
     element: (

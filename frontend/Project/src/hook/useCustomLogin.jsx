@@ -20,6 +20,7 @@ const useCustomLogin = () => {
   const moveToPath = (path) => {
     //페이지 이동 replace:true 뒤로이동 방지
     navigate(path, { replace: true });
+    window.scrollTo(0, 0);
   };
   const moveToLogin = () => {
     //로그인 페이지로 이동
@@ -30,6 +31,13 @@ const useCustomLogin = () => {
     return <Navigate replace to="/login" />;
   };
 
+  const checkLogin = () => {
+    if (!loginState?.userId) {
+      moveToPath("/login"); // 로그인 상태가 아니라면 로그인 페이지로 리디렉션
+      return false;
+    }
+    return true;
+  };
   const exceptionHandle = (ex) => {
     console.log("Exception ----------------------------------------------- ");
     console.log(ex);
@@ -57,6 +65,7 @@ const useCustomLogin = () => {
     moveToLogin,
     moveToLoginReturn,
     exceptionHandle,
+    checkLogin,
   };
 };
 

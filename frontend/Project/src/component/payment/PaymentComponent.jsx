@@ -5,6 +5,7 @@ import { API_SERVER_HOST } from "../../api/cartApi.jsx";
 import { paymentPost } from "../../api/paymentApi.jsx";
 import { useSelector } from "react-redux";
 import { getMyAddresses, updateAddress } from "../../api/addressApi.jsx";
+import useCustomLogin from "../../hook/useCustomLogin.jsx";
 /* 숫자 포맷터 */
 const C = (n) => (Number(n) || 0).toLocaleString("ko-KR");
 
@@ -23,7 +24,6 @@ const initState = [
 
 export default function PaymentComponent() {
   const { state } = useLocation(); // Cart에서 넘어온 { items, from }
-  console.log(state?.items);
   const [items, setItems] = useState([]);
   const [address, setAddress] = useState(initState);
   const [addrOpen, setAddrOpen] = useState(false);
@@ -33,6 +33,7 @@ export default function PaymentComponent() {
   const [reqText, setReqText] = useState("");
   const [doorPw, setDoorPw] = useState("");
   const [memo, setMemo] = useState(""); // memo
+  const { moveToPath } = useCustomLogin();
 
   // 기본배송지 를 찾음 (존재하지 않으면 배열에 첫번째 값사용)
   const defaultAddress =
@@ -110,6 +111,7 @@ export default function PaymentComponent() {
     }
   }, [address]); // address가 변경될 때마다 실행
 
+  // 요청사항 업데이트
   useEffect(() => {
     let updatedMemo = "";
 
@@ -175,7 +177,7 @@ export default function PaymentComponent() {
     try {
       await paymentPost(paymentData); // API 호출
       alert("결제가 완료되었습니다!");
-      // 결제 완료 후 처리할 코드 (예: 결제 완료 페이지로 이동)
+      moveToPath("/member/mypage"); // 결제 후 마이페이지로 이동
     } catch (error) {
       console.error("결제 처리 오류:", error);
       alert("결제 처리 중 오류가 발생했습니다.");
@@ -267,9 +269,9 @@ export default function PaymentComponent() {
                     </div>
                     <button
                       className="btn btn-sm btn-dark"
-                      onClick={() => setAddrOpen(true)} // 주소 수정 모달 열기
+                      onClick={() => setAddrOpen(true)} // 주소 변경 모달 열기
                     >
-                      주소 수정
+                      주소 변경
                     </button>
                   </div>
                 </div>

@@ -54,7 +54,6 @@ export default function AddressComponent({ onSaved }) {
   // 프리셋 선택 상태("CUSTOM"이면 직접입력)
   const [memoSelect, setMemoSelect] = useState("");
 
-
   // ====== PaymentComponent 스타일 배송 메모 상태 ======
   // none | door | guard | custom
   const [reqType, setReqType] = useState("none");
@@ -280,9 +279,7 @@ export default function AddressComponent({ onSaved }) {
       // 기본을 지웠다면 남은 첫 항목을 기본으로 지정
       if (target?.isDefault && next.length > 0) {
         const newDef = next[0].id;
-        try {
-          await setDefaultAddress(newDef);
-        } catch {}
+        await setDefaultAddress(newDef);
         next = next.map((a, idx) => ({ ...a, isDefault: idx === 0 }));
       }
 
