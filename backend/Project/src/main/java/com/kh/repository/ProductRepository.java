@@ -24,10 +24,21 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	void updateToDelete(@Param("pno") Long pno, @Param("flag") boolean flag);
 
 	// 리스트에 첫번째 이미지(ord=0) + 가격이 가장 낮은 옵션 출력
-	@Query("select p, pi, op from Product p " + "left join p.imageList pi on pi.ord = 0 " + "left join p.options op "
-			+ "where p.delFlag = false and op.price = ("
-			+ " select min(o.price) from ProductOption o where o.product = p" + ")")
-	Page<Object[]> selectList(Pageable pageable);
+	@Query("select p, pi, op from Product p "
+		     + "left join p.imageList pi on pi.ord = 0 "
+		     + "left join p.options op "
+		     + "where p.delFlag = false "
+		     + "and exists ("
+		     + "   select 1 from ProductOption o "
+		     + "   where o.product = p and o.stock > 0"
+		     + ") "
+		     + "and op.price = ("
+		     + "   select min(o.price) "
+		     + "   from ProductOption o "
+		     + "   where o.product = p and o.stock > 0"
+		     + ")")
+    Page<Object[]> selectList(Pageable pageable);
+
 	
 	// product 옵션으로 product 맵핑
 	@EntityGraph(attributePaths = { "options" })
