@@ -43,7 +43,7 @@ export const getNotice = async (id) => {
   - 받음: 생성 결과
 */
 export const postNotice = async (noticeData) => {
-  const res = await jwtAxios.post(`${prefix}/`, noticeData);
+  const res = await jwtAxios.post(`${prefix}`, noticeData);
   return res.data;
 };
 
@@ -68,4 +68,3 @@ export const deleteNotice = async (id) => {
   const res = await jwtAxios.delete(`${prefix}/${id}`);
   return res.data;
 };
-  

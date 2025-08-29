@@ -19,7 +19,6 @@ export default function MyPage() {
   const [me, setMe] = useState({ realName: fallbackName, email: "" });
   const navigate = useNavigate();
   const [openProfile, setOpenProfile] = useState(false);
-  const [openSecurity, setOpenSecurity] = useState(false);
   const [openAddress, setOpenAddress] = useState(false);
   const [openOrders, setOpenOrders] = useState(false);
   const isLoggedIn = Boolean(loginState?.userId);
@@ -28,6 +27,7 @@ export default function MyPage() {
       alert("로그인이 필요한 서비스입니다.");
       navigate("/login");
     }
+    window.scrollTo(0, 0);
   }, [isLoggedIn, navigate]);
   const loadMe = useCallback(async () => {
     try {
