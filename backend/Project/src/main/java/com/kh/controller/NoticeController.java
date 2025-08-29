@@ -30,7 +30,6 @@ public class NoticeController {
 
 	@PostMapping
 	public Map<String, Long> register(@RequestBody NoticeDTO noticeDTO) {
-
 		Long pno = noticeService.register(noticeDTO);
 		return Map.of("result", pno);
 	}

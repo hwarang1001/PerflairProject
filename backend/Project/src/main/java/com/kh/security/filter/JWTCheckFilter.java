@@ -75,7 +75,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 			Boolean social = (Boolean) claims.getOrDefault("social", false);
 			List<String> roleNames = (List<String>) claims.get("roleNames");
 
-			MemberDTO memberDTO = new MemberDTO(userId, "", name, address, phoneNum, social.booleanValue(), roleNames);
+			MemberDTO memberDTO = new MemberDTO(userId, "", name, phoneNum, social.booleanValue(), roleNames);
 
 			UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberDTO,
 					null, memberDTO.getAuthorities());
